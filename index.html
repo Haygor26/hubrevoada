@@ -404,6 +404,14 @@
   .side-nav a:hover .tip { opacity: 1; }
   .side-nav a.active .tip { color: var(--accent-soft); }
   @media (max-width: 900px) { .side-nav { display: none; } }
+  .top-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 26px 0 6px; }
+  .top-nav a { color: var(--text); text-decoration: none; font: 600 .84rem/1 var(--sans, inherit);
+    padding: 9px 18px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+    transition: background .2s, border-color .2s, color .2s, transform .2s; }
+  .top-nav a:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); color: var(--accent-soft); }
+  .top-nav a.active { background: var(--accent); border-color: var(--accent); color: #1e0f36; }
+  @media (max-width: 640px) { .top-nav { gap: 8px; } .top-nav a { padding: 8px 14px; font-size: .78rem; } }
+
 
 </style>
 </head>
@@ -434,6 +442,15 @@
     <p class="eyebrow">Hub do core · Patch 12.1</p>
     <h1>A Maldição de <span>Ula'tek</span></h1>
     <p class="lead">Cronograma, roster e progressão do nosso core no patch 12.1. Nossa revoada de dragões orgulhosos — bafônica dentro e fora da masmorra. 🏳️‍🌈</p>
+    <nav class="top-nav" aria-label="Navegação entre seções">
+      <a href="#podio" data-section="podio">Pódio</a>
+      <a href="#plano" data-section="plano">Plano</a>
+      <a href="#progressao" data-section="progressao">Progressão</a>
+      <a href="#kills" data-section="kills">Pulls</a>
+      <a href="#cronograma" data-section="cronograma">Cronograma</a>
+      <a href="#roster" data-section="roster">Roster</a>
+      <a href="#presenca" data-section="presenca">Presença</a>
+    </nav>
   </header>
 
   <section id="podio" class="reveal">
@@ -656,7 +673,7 @@
       ['Seind','lock','Destruction',285,'azralon',267],
       ['Shanti','priest','Shadow',290,'azralon',258],
       ['Sicarious','dk','Unholy',289,'nemesis',252],
-      ['Tiagolargado','dk','Unholy',294,'azralon',252],
+      ['Tiagolargado','dk','Unholy',295,'azralon',252],
       ['Valunii','monk','Windwalker',286,'azralon',269]
     ]
   };
@@ -868,17 +885,17 @@
 
   // side-nav: scrollspy — marca o dot ativo conforme a seção visível
   (function () {
-    var links = document.querySelectorAll('.side-nav a');
+    var links = document.querySelectorAll('.side-nav a, .top-nav a');
     var map = {};
-    links.forEach(function (a) { map[a.dataset.section] = a; });
+    links.forEach(function (a) { (map[a.dataset.section] = map[a.dataset.section] || []).push(a); });
     var sections = Array.prototype.slice.call(document.querySelectorAll('section[id]'));
     var spy = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         if (!e.isIntersecting) return;
-        var link = map[e.target.id];
-        if (!link) return;
+        var linkGroup = map[e.target.id];
+        if (!linkGroup) return;
         links.forEach(function (l) { l.classList.remove('active'); });
-        link.classList.add('active');
+        linkGroup.forEach(function (l) { l.classList.add('active'); });
       });
     }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
     sections.forEach(function (s) { spy.observe(s); });
