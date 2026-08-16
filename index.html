@@ -925,11 +925,13 @@
     var sections = Array.prototype.slice.call(document.querySelectorAll('section[id]'));
     var ticking = false;
     function update() {
-      var off = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scroll-off')) || 120;
-      var refLine = off + 6;
+      // linha de referência generosa (35% da viewport) em vez de colada na barra —
+      // assim a seção já entra 'ativa' assim que o título dela aparece perto do topo,
+      // mesmo que a seção anterior (ex.: Cronograma) seja curta e já tenha passado
+      var refLine = window.innerHeight * 0.35;
       var current = sections[0];
       for (var i = 0; i < sections.length; i++) {
-        if (sections[i].getBoundingClientRect().top - refLine <= 0) current = sections[i];
+        if (sections[i].getBoundingClientRect().top <= refLine) current = sections[i];
         else break;
       }
       var atBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 2);
