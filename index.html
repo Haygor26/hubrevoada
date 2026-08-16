@@ -54,7 +54,7 @@
   }
 
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scroll-padding-top: var(--scroll-off, 130px); }
   body {
     margin: 0; background: var(--bg); color: var(--text);
     font-family: var(--font); line-height: 1.55;
@@ -900,7 +900,10 @@
     var topbar = document.querySelector('.topbar');
     var topnav = document.querySelector('.top-nav');
     if (!topbar || !topnav) return;
-    function setH() { document.documentElement.style.setProperty('--topbar-h', topbar.offsetHeight + 'px'); }
+    function setH() {
+      document.documentElement.style.setProperty('--topbar-h', topbar.offsetHeight + 'px');
+      document.documentElement.style.setProperty('--scroll-off', (topbar.offsetHeight + topnav.offsetHeight + 16) + 'px');
+    }
     setH();
     window.addEventListener('resize', setH);
     var sentinel = document.createElement('div');
