@@ -404,13 +404,24 @@
   .side-nav a:hover .tip { opacity: 1; }
   .side-nav a.active .tip { color: var(--accent-soft); }
   @media (max-width: 900px) { .side-nav { display: none; } }
-  .top-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 26px 0 6px; }
-  .top-nav a { color: var(--text); text-decoration: none; font: 600 .84rem/1 var(--sans, inherit);
-    padding: 9px 18px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
-    transition: background .2s, border-color .2s, color .2s, transform .2s; }
-  .top-nav a:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); color: var(--accent-soft); }
-  .top-nav a.active { background: var(--accent); border-color: var(--accent); color: #1e0f36; }
-  @media (max-width: 640px) { .top-nav { gap: 8px; } .top-nav a { padding: 8px 14px; font-size: .78rem; } }
+  .top-nav { position: sticky; top: var(--topbar-h, 64px); z-index: 39;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    margin: 26px 0 6px; padding: 8px; border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid var(--line); box-shadow: 0 14px 34px -18px rgba(0,0,0,.7);
+    transition: box-shadow .25s, top .25s; }
+  .top-nav.stuck { box-shadow: 0 16px 40px -16px rgba(0,0,0,.85); }
+  .top-nav a { display: flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none;
+    font: 600 .82rem/1 var(--font); padding: 9px 16px; border-radius: 999px;
+    transition: background .2s, color .2s, transform .15s, box-shadow .2s; }
+  .top-nav a .ic { font-size: .95em; line-height: 1; }
+  .top-nav a:hover { color: var(--accent-soft); background: color-mix(in srgb, var(--accent) 16%, transparent); transform: translateY(-1px); }
+  .top-nav a.active { color: #1e0f36; background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+    box-shadow: 0 6px 18px -4px color-mix(in srgb, var(--accent) 65%, transparent); }
+  @media (max-width: 640px) { .top-nav { gap: 5px; padding: 6px; }
+    .top-nav a { padding: 7px 11px; font-size: .74rem; }
+    .top-nav a .ic { display: none; } }
 
 
 </style>
@@ -443,13 +454,13 @@
     <h1>A Maldição de <span>Ula'tek</span></h1>
     <p class="lead">Cronograma, roster e progressão do nosso core no patch 12.1. Nossa revoada de dragões orgulhosos — bafônica dentro e fora da masmorra. 🏳️‍🌈</p>
     <nav class="top-nav" aria-label="Navegação entre seções">
-      <a href="#podio" data-section="podio">Pódio</a>
-      <a href="#plano" data-section="plano">Plano</a>
-      <a href="#progressao" data-section="progressao">Progressão</a>
-      <a href="#kills" data-section="kills">Pulls</a>
-      <a href="#cronograma" data-section="cronograma">Cronograma</a>
-      <a href="#roster" data-section="roster">Roster</a>
-      <a href="#presenca" data-section="presenca">Presença</a>
+      <a href="#podio" data-section="podio"><span class="ic">🏆</span>Pódio</a>
+      <a href="#plano" data-section="plano"><span class="ic">🧭</span>Plano</a>
+      <a href="#progressao" data-section="progressao"><span class="ic">📈</span>Progressão</a>
+      <a href="#kills" data-section="kills"><span class="ic">⚔️</span>Pulls</a>
+      <a href="#cronograma" data-section="cronograma"><span class="ic">🗓️</span>Cronograma</a>
+      <a href="#roster" data-section="roster"><span class="ic">👥</span>Roster</a>
+      <a href="#presenca" data-section="presenca"><span class="ic">📊</span>Presença</a>
     </nav>
   </header>
 
@@ -882,6 +893,23 @@
     });
   }, { threshold: 0.16 });
   document.querySelectorAll('.reveal').forEach(function (s) { io.observe(s); });
+
+  // top-nav: altura da topbar como var CSS + estado 'grudado' ao rolar
+  (function () {
+    var topbar = document.querySelector('.topbar');
+    var topnav = document.querySelector('.top-nav');
+    if (!topbar || !topnav) return;
+    function setH() { document.documentElement.style.setProperty('--topbar-h', topbar.offsetHeight + 'px'); }
+    setH();
+    window.addEventListener('resize', setH);
+    var sentinel = document.createElement('div');
+    sentinel.style.cssText = 'position:absolute;height:1px;width:1px;visibility:hidden;';
+    topnav.parentNode.insertBefore(sentinel, topnav);
+    var obs = new IntersectionObserver(function (entries) {
+      topnav.classList.toggle('stuck', !entries[0].isIntersecting);
+    });
+    obs.observe(sentinel);
+  })();
 
   // side-nav: scrollspy — marca o dot ativo conforme a seção visível
   (function () {
