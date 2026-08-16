@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<script>if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Revoada Bafônica — Hub da Season</title>
 <meta name="description" content="Cronograma, roster e progressão do core Revoada Bafônica — Patch 12.1, The Venomous Abyss.">
@@ -950,5 +951,13 @@
   })();
 </script>
 
+<script>
+  // F5/reload sempre volta pro topo, sem seguir #hash da URL
+  (function () {
+    if (location.hash) { history.replaceState(null, '', location.pathname + location.search); }
+    window.scrollTo(0, 0);
+    window.addEventListener('load', function () { window.scrollTo(0, 0); });
+  })();
+</script>
 </body>
 </html>
