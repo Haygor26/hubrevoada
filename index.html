@@ -915,22 +915,36 @@
     obs.observe(sentinel);
   })();
 
-  // side-nav: scrollspy — marca o dot ativo conforme a seção visível
+  // side-nav: scrollspy — marca o link ativo pela seção cujo topo já passou da linha de referência
+  // (baseado em posição de scroll, não em IntersectionObserver por faixa — evita 2 seções
+  // 'intersectando' ao mesmo tempo quando uma seção é curta, tipo o Cronograma)
   (function () {
     var links = document.querySelectorAll('.side-nav a, .top-nav a');
     var map = {};
     links.forEach(function (a) { (map[a.dataset.section] = map[a.dataset.section] || []).push(a); });
     var sections = Array.prototype.slice.call(document.querySelectorAll('section[id]'));
-    var spy = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        var linkGroup = map[e.target.id];
-        if (!linkGroup) return;
-        links.forEach(function (l) { l.classList.remove('active'); });
-        linkGroup.forEach(function (l) { l.classList.add('active'); });
-      });
-    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
-    sections.forEach(function (s) { spy.observe(s); });
+    var ticking = false;
+    function update() {
+      var off = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scroll-off')) || 120;
+      var refLine = off + 6;
+      var current = sections[0];
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i].getBoundingClientRect().top - refLine <= 0) current = sections[i];
+        else break;
+      }
+      var atBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 2);
+      if (atBottom) current = sections[sections.length - 1];
+      links.forEach(function (l) { l.classList.remove('active'); });
+      var linkGroup = map[current.id];
+      if (linkGroup) linkGroup.forEach(function (l) { l.classList.add('active'); });
+    }
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { update(); ticking = false; });
+    }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
   })();
 </script>
 
