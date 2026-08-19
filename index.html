@@ -883,11 +883,11 @@
     var thead = '<thead><tr><th class="corner">Raider</th>' + NIGHTS.map(function (n, i) {
       var dow = WD[new Date(n[2], n[0] - 1, n[1]).getDay()];
       var upcoming = (i > LAST_LOGGED);
-      var opener = (i === 0);
+      var isNext = (i === LAST_LOGGED + 1);
       return '<th class="night' + (upcoming ? ' upcoming' : ' active') + '">' +
         '<span class="wd">' + dow + '</span>' +
         '<span class="dt">' + n[1] + '/' + n[0] + '</span>' +
-        (opener ? '<span class="flag">Abertura</span>' : '') + '</th>';
+        (isNext ? '<span class="flag">Próxima</span>' : '') + '</th>';
     }).join('') + '</tr></thead>';
 
     // corpo: uma linha por raider
