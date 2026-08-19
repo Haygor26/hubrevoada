@@ -353,14 +353,14 @@
     position: sticky; left: 0; z-index: 2; background: var(--surface-2);
     text-align: left; border-right: 1px solid var(--line); }
   .att-table thead .corner { z-index: 3; }
-  .att-table .who { width: 172px; }
+  .att-table .who, .att-table thead .corner, .att-table tfoot .corner { width: 172px; max-width: 172px; box-sizing: border-box; }
   .att-table .who { display: flex; align-items: center; gap: 9px; padding: 8px 14px; }
   .att-table .who .role-ico { flex: none; font-size: .85rem; line-height: 1; }
   .att-table .who .mini { width: 26px; height: 26px; border-radius: 7px; flex: none;
     background-size: cover; background-position: center 18%; border: 1.5px solid var(--line); }
   .att-table .who .mini-i { display: grid; place-items: center; font: 800 .8rem/1 var(--font); color: #0e0b16; }
   .att-table .who .wn { font-weight: 700; font-size: .9rem; white-space: nowrap; }
-  .att-table .corner { padding: 12px 14px; font: 700 .72rem/1 var(--mono); letter-spacing: .06em;
+  .att-table .corner { padding: 10px 14px; font: 700 .72rem/1 var(--mono); letter-spacing: .06em;
     text-transform: uppercase; color: var(--muted); vertical-align: middle; }
   /* colunas de noite */
   .att-table .night { padding: 10px 6px; min-width: 50px; text-align: center; vertical-align: middle; }
