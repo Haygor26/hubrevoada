@@ -186,6 +186,8 @@
     background-color: var(--bg-2); background-repeat: no-repeat;
     background-position: center; background-size: cover;
     border: 2px solid var(--line); box-shadow: 0 0 14px -5px #000; }
+  /* crop-fix: a arte oficial da Nymrissa vem torta/pequena no frame — zoom + endireita só a dela */
+  .kill .thumb.thumb-fix-nymrissa { background-size: 230%; background-position: 40% 48%; transform: rotate(-13deg); }
   .kill:hover .thumb { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
   .kill .body { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
     flex-wrap: wrap; padding: 13px 16px; }
@@ -563,37 +565,23 @@
     </div>
     <div class="prog-grid">
       <div class="card raid-card">
-        <div class="name">The Venomous Abyss</div>
-        <div class="tier">Season nova · Patch 12.1 · 8 chefes</div>
+        <div class="name">The Venomous Abyss / The Tidebound Grotto</div>
+        <div class="tier">Season nova · Patch 12.1 · 9 chefes</div>
         <div class="bars">
           <div class="bar n">
-            <div class="top"><span class="lbl">Normal</span><b>3 / 8</b></div>
-            <div class="track"><div class="fill n" data-w="37.5"></div></div>
+            <div class="top"><span class="lbl">Normal</span><b>4 / 9</b></div>
+            <div class="track"><div class="fill n" data-w="44.4"></div></div>
           </div>
           <div class="bar h">
-            <div class="top"><span class="lbl">Heroico</span><b>0 / 8</b></div>
+            <div class="top"><span class="lbl">Heroico</span><b>0 / 9</b></div>
             <div class="track"><div class="fill h" data-w="0"></div></div>
           </div>
         </div>
       </div>
       <div class="stat-col">
-        <div class="card stat"><span class="k">3/8</span><span class="l">Normal · em progressão</span></div>
-        <div class="card stat"><span class="k accent">0/8</span><span class="l">Heroico · aguardando reset</span></div>
+        <div class="card stat"><span class="k">4/9</span><span class="l">Normal · em progressão</span></div>
+        <div class="card stat"><span class="k accent">0/9</span><span class="l">Heroico · aguardando reset</span></div>
         <div class="card stat"><span class="k">28</span><span class="l">Raiders no core</span></div>
-      </div>
-      <div class="card raid-card mini">
-        <div class="name">The Tidebound Grotto</div>
-        <div class="tier">Mini-raid extra · Patch 12.1 · 1 chefe</div>
-        <div class="bars">
-          <div class="bar n">
-            <div class="top"><span class="lbl">Normal</span><b>1 / 1</b></div>
-            <div class="track"><div class="fill n" data-w="100"></div></div>
-          </div>
-          <div class="bar h">
-            <div class="top"><span class="lbl">Heroico</span><b>0 / 1</b></div>
-            <div class="track"><div class="fill h" data-w="0"></div></div>
-          </div>
-        </div>
       </div>
     </div>
   </section>
@@ -602,7 +590,7 @@
     <div class="shead">
       <span class="n">03</span>
       <h2>Pulls</h2>
-      <span class="hint">3/8 chefes abatidos no Normal</span>
+      <span class="hint">4/9 chefes abatidos no Normal</span>
     </div>
     <div class="raid-group">
       <div class="raid-group-head">The Tidebound Grotto</div>
@@ -893,8 +881,9 @@
         var img = BOSSICONS[k[0]];
         var el = document.createElement('div');
         el.className = 'kill ' + status;
+        var thumbCls = 'thumb' + (k[0] === 'Nymrissa Wavecaller' ? ' thumb-fix-nymrissa' : '');
         el.innerHTML =
-          '<span class="thumb"' + (img ? ' style="background-image:url(' + img + ')"' : '') + '></span>' +
+          '<span class="' + thumbCls + '"' + (img ? ' style="background-image:url(' + img + ')"' : '') + '></span>' +
           '<span class="body">' +
           '<span class="idx">' + (i + 1) + '</span>' +
           '<span class="bn">' + esc(k[0]) +
