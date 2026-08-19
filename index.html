@@ -127,6 +127,11 @@
   /* progress hero */
   .prog-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; }
   @media (max-width: 720px) { .prog-grid { grid-template-columns: 1fr; } }
+  .raid-card.mini { grid-column: 1 / -1; padding: 18px 26px; flex-direction: row; align-items: center; gap: 26px; flex-wrap: wrap; }
+  .raid-card.mini .name { font-size: 1.05rem; }
+  .raid-card.mini .bars { flex: 1; flex-direction: row; margin-top: 0; gap: 20px; min-width: 260px; }
+  .raid-card.mini .bar { flex: 1; }
+  @media (max-width: 640px) { .raid-card.mini { flex-direction: column; align-items: stretch; } .raid-card.mini .bars { flex-direction: column; } }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
   .raid-card { padding: 26px; display: flex; flex-direction: column; }
   .raid-card .name { font-size: 1.35rem; font-weight: 800; }
@@ -553,8 +558,8 @@
         <div class="tier">Season nova · Patch 12.1 · 8 chefes</div>
         <div class="bars">
           <div class="bar n">
-            <div class="top"><span class="lbl">Normal</span><b>0 / 8</b></div>
-            <div class="track"><div class="fill n" data-w="0"></div></div>
+            <div class="top"><span class="lbl">Normal</span><b>3 / 8</b></div>
+            <div class="track"><div class="fill n" data-w="37.5"></div></div>
           </div>
           <div class="bar h">
             <div class="top"><span class="lbl">Heroico</span><b>0 / 8</b></div>
@@ -563,9 +568,23 @@
         </div>
       </div>
       <div class="stat-col">
-        <div class="card stat"><span class="k">0/8</span><span class="l">Normal · aguardando reset</span></div>
+        <div class="card stat"><span class="k">3/8</span><span class="l">Normal · em progressão</span></div>
         <div class="card stat"><span class="k accent">0/8</span><span class="l">Heroico · aguardando reset</span></div>
         <div class="card stat"><span class="k">28</span><span class="l">Raiders no core</span></div>
+      </div>
+      <div class="card raid-card mini">
+        <div class="name">The Tidebound Grotto</div>
+        <div class="tier">Mini-raid extra · Patch 12.1 · 1 chefe</div>
+        <div class="bars">
+          <div class="bar n">
+            <div class="top"><span class="lbl">Normal</span><b>1 / 1</b></div>
+            <div class="track"><div class="fill n" data-w="100"></div></div>
+          </div>
+          <div class="bar h">
+            <div class="top"><span class="lbl">Heroico</span><b>0 / 1</b></div>
+            <div class="track"><div class="fill h" data-w="0"></div></div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -574,7 +593,7 @@
     <div class="shead">
       <span class="n">03</span>
       <h2>Pulls</h2>
-      <span class="hint">aguardando primeira derrubada</span>
+      <span class="hint">3/8 chefes abatidos no Normal</span>
     </div>
     <div class="kills-cols">
       <div class="kills-col n">
@@ -805,10 +824,10 @@
   // [boss, pulls, killed] — status: sem pull = cinza · pull sem kill = colorido (em progressão) · killed = verde (abatido)
   // [boss, pulls, killed] — mesmo status do Heroico: sem pull = cinza · pull sem kill = colorido · killed = verde
   var KILLS_N = [
-    ["Nek'zali the Soulcoiler",0,false],
-    ['Entombed Sentinels',0,false],
+    ["Nek'zali the Soulcoiler",3,true],
+    ['Entombed Sentinels',2,true],
     ['The Lost Explorers',0,false],
-    ['Vashnik the Malignant',0,false],
+    ['Vashnik the Malignant',3,true],
     ['Sszorak',0,false],
     ['The Twin Fangs',0,false],
     ['The Coiled Altar',0,false],
@@ -866,9 +885,9 @@
       [9, 29, 2026], [9, 30, 2026], [10, 6, 2026], [10, 7, 2026]
     ];
     // índice da última noite já realizada (-1 = nenhuma ainda). A partir daí as colunas ficam cinza.
-    var LAST_LOGGED = 0;
+    var LAST_LOGGED = -1;
     // presença real por jogador → { "M/D": 1|0 } — preencher conforme os logs saírem
-    var ATT = {"Bahryzta":{"8/18":1},"Ormot":{"8/18":1},"Athelìa":{"8/18":1},"Bacchus":{"8/18":1},"Buticodeoro":{"8/18":1},"Salkiing":{"8/18":1},"Tessagrayh":{"8/18":1},"Aloppes":{"8/18":1},"Carina":{"8/18":1},"Dïazepam":{"8/18":1},"Dracullaura":{"8/18":1},"Euridice":{"8/18":1},"Feanori":{"8/18":1},"Grömdak":{"8/18":1},"Hakarvyr":{"8/18":1},"Hyzor":{"8/18":1},"Inflexível":{"8/18":1},"Jazzkiler":{"8/18":1},"Kissuko":{"8/18":1},"Kolhberg":{"8/18":1},"Pervertido":{"8/18":1},"Riswen":{"8/18":1},"Saponáceo":{"8/18":1},"Seind":{"8/18":1},"Shanti":{"8/18":1},"Sicarious":{"8/18":1},"Tiagolargado":{"8/18":1},"Valunii":{"8/18":1}};
+    var ATT = {};
 
     var ALL = ROSTER.tank.concat(ROSTER.heal, ROSTER.dps);
     var ROLE_ICON = { tank: '🛡️', heal: '💚', dps: '⚔️' };
