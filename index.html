@@ -270,15 +270,17 @@
   .members .m .cl { display: block; margin-top: 4px; font-size: .82rem; font-weight: 600;
     color: var(--cc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .members .m .ilvl { flex: none; text-align: center; font: 800 .92rem/1 var(--mono); font-variant-numeric: tabular-nums;
-    color: var(--text); background: var(--surface-2); border: 1px solid var(--line);
+    color: #fff; -webkit-text-stroke: 1px #000; text-stroke: 1px #000;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 3px rgba(0,0,0,.6);
+    background: var(--surface-2); border: 1px solid var(--line);
     padding: 6px 9px; border-radius: 9px; }
   .members .m .ilvl small { display: block; font: 600 .5rem/1 var(--mono); letter-spacing: .12em;
-    color: var(--faint); text-transform: uppercase; margin-bottom: 3px; }
-  .members .m .ilvl.ilvl-good { color: #0b1f16; background: linear-gradient(90deg, var(--good), #3fb6ff); border-color: transparent; }
+    color: var(--faint); text-transform: uppercase; margin-bottom: 3px; -webkit-text-stroke: 0; text-shadow: none; }
+  .members .m .ilvl.ilvl-good { background: linear-gradient(90deg, var(--good), #3fb6ff); border-color: transparent; }
   .members .m .ilvl.ilvl-good small { color: #0b1f16; opacity: .7; }
-  .members .m .ilvl.ilvl-warn { color: #2a1c00; background: var(--warn); border-color: transparent; }
+  .members .m .ilvl.ilvl-warn { background: var(--warn); border-color: transparent; }
   .members .m .ilvl.ilvl-warn small { color: #2a1c00; opacity: .7; }
-  .members .m .ilvl.ilvl-crit { color: #2a0a0a; background: var(--crit); border-color: transparent; }
+  .members .m .ilvl.ilvl-crit { background: var(--crit); border-color: transparent; }
   .members .m .ilvl.ilvl-crit small { color: #2a0a0a; opacity: .7; }
   .members .m::after { content: "↗"; position: absolute; top: 8px; right: 10px; font-size: .8rem;
     color: var(--cc); opacity: 0; transform: translateY(2px); transition: opacity .2s, transform .2s; }
@@ -687,36 +689,36 @@
   // [nome, classe, spec, ilvl, reino, specId] — ordem alfabética dentro de cada role
   var ROSTER = {
     tank: [
-      ['Bahryzta','pala','Protection',294,'azralon',66],
-      ['Ormot','pala','Protection',293,'azralon',66]
+      ['Bahryzta','pala','Protection',297,'azralon',66],
+      ['Ormot','pala','Protection',296,'azralon',66]
     ],
     heal: [
-      ['Athelìa','priest','Discipline',296,'azralon',256],
-      ['Bacchus','evoker','Preservation',286,'azralon',1468],
-      ['Buticodeoro','druid','Restoration',284,'azralon',105],
-      ['Salkiing','pala','Holy',286,'azralon',65],
-      ['Tessagrayh','druid','Restoration',294,'azralon',105]
+      ['Athelìa','priest','Discipline',298,'azralon',256],
+      ['Bacchus','evoker','Preservation',295,'azralon',1468],
+      ['Buticodeoro','druid','Restoration',287,'azralon',105],
+      ['Salkiing','pala','Holy',294,'azralon',65],
+      ['Tessagrayh','druid','Restoration',295,'azralon',105]
     ],
     dps: [
-      ['Aloppes','hunter','Marksmanship',291,'azralon',254],
-      ['Carina','pala','Retribution',292,'azralon',70],
-      ['Dïazepam','priest','Shadow',292,'stormrage',258],
-      ['Dracullaura','lock','Destruction',290,'azralon',267],
-      ['Euridice','mage','Frost',293,'azralon',64],
-      ['Feanori','dh','Havoc',291,'nemesis',577],
-      ['Grömdak','lock','Destruction',294,'azralon',267],
-      ['Hakarvyr','evoker','Devastation',292,'azralon',1467],
+      ['Aloppes','hunter','Marksmanship',294,'azralon',254],
+      ['Carina','pala','Retribution',297,'azralon',70],
+      ['Dïazepam','priest','Shadow',295,'stormrage',258],
+      ['Dracullaura','lock','Destruction',294,'azralon',267],
+      ['Euridice','mage','Frost',295,'azralon',64],
+      ['Feanori','dh','Havoc',295,'nemesis',577],
+      ['Grömdak','lock','Destruction',295,'azralon',267],
+      ['Hakarvyr','evoker','Devastation',298,'azralon',1467],
       ['Hyzor','dk','Unholy',290,'azralon',252],
-      ['Inflexível','druid','Balance',293,'azralon',102],
-      ['Jazzkiler','warr','Arms',288,'azralon',71],
+      ['Inflexível','druid','Balance',294,'azralon',102],
+      ['Jazzkiler','warr','Arms',293,'azralon',71],
       ['Kissuko','shaman','Elemental',293,'stormrage',262],
-      ['Kolhberg','hunter','Beast Mastery',292,'tichondrius',253],
-      ['Pervertido','warr','Arms',293,'azralon',71],
-      ['Riswen','dh','Devourer',288,'azralon',1480],
+      ['Kolhberg','hunter','Beast Mastery',295,'tichondrius',253],
+      ['Pervertido','warr','Arms',298,'azralon',71],
+      ['Riswen','dh','Devourer',291,'azralon',1480],
       ['Saponáceo','dh','Havoc',294,'area-52',577],
-      ['Seind','lock','Destruction',288,'azralon',267],
-      ['Shanti','priest','Shadow',291,'azralon',258],
-      ['Sicarious','dk','Unholy',291,'nemesis',252],
+      ['Seind','lock','Destruction',290,'azralon',267],
+      ['Shanti','priest','Shadow',292,'azralon',258],
+      ['Sicarious','dk','Unholy',295,'nemesis',252],
       ['Tiagolargado','dk','Unholy',295,'azralon',252],
       ['Valunii','monk','Windwalker',286,'azralon',269]
     ]
