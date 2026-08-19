@@ -159,7 +159,13 @@
   .stat .l { color: var(--muted); font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; margin-top: 6px; }
 
   /* kills da tier */
+  .raid-group { margin-bottom: 34px; }
+  .raid-group:last-child { margin-bottom: 0; }
+  .raid-group-head { font: 800 1.08rem/1 inherit; margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--line); }
+  .raid-group-center { max-width: 640px; margin-left: auto; margin-right: auto; }
   .kills-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; }
+  .kills-cols-2 { grid-template-columns: 1fr 1fr; }
   @media (max-width: 980px) { .kills-cols { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 720px) { .kills-cols { grid-template-columns: 1fr; } }
   .kills-col { --dot: var(--accent); }
@@ -598,18 +604,35 @@
       <h2>Pulls</h2>
       <span class="hint">3/8 chefes abatidos no Normal</span>
     </div>
-    <div class="kills-cols">
-      <div class="kills-col n">
-        <div class="kcol-head">Normal</div>
-        <div class="kills" id="killsListNormal"></div>
+    <div class="raid-group">
+      <div class="raid-group-head">The Tidebound Grotto</div>
+      <div class="kills-cols">
+        <div class="kills-col n">
+          <div class="kcol-head">Normal</div>
+          <div class="kills" id="killsListNormalTG"></div>
+        </div>
+        <div class="kills-col h">
+          <div class="kcol-head">Heroico</div>
+          <div class="kills" id="killsListHeroicTG"></div>
+        </div>
+        <div class="kills-col m">
+          <div class="kcol-head">Mítico <small>· só Nymrissa Wavecaller</small></div>
+          <div class="kills" id="killsListMythicTG"></div>
+        </div>
       </div>
-      <div class="kills-col h">
-        <div class="kcol-head">Heroico</div>
-        <div class="kills" id="killsListHeroic"></div>
-      </div>
-      <div class="kills-col m">
-        <div class="kcol-head">Mítico <small>· só Nymrissa Wavecaller</small></div>
-        <div class="kills" id="killsListMythic"></div>
+    </div>
+
+    <div class="raid-group raid-group-center">
+      <div class="raid-group-head">The Venomous Abyss</div>
+      <div class="kills-cols kills-cols-2">
+        <div class="kills-col n">
+          <div class="kcol-head">Normal</div>
+          <div class="kills" id="killsListNormal"></div>
+        </div>
+        <div class="kills-col h">
+          <div class="kcol-head">Heroico</div>
+          <div class="kills" id="killsListHeroic"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -830,8 +853,16 @@
   // [boss, pulls] — season nova, sem kill registrado ainda
   // [boss, pulls, killed] — status: sem pull = cinza · pull sem kill = colorido (em progressão) · killed = verde (abatido)
   // [boss, pulls, killed] — mesmo status do Heroico: sem pull = cinza · pull sem kill = colorido · killed = verde
+  var KILLS_N_TG = [
+    ['Nymrissa Wavecaller',1,true]
+  ];
+  var KILLS_H_TG = [
+    ['Nymrissa Wavecaller',0,false]
+  ];
+  var KILLS_M_TG = [
+    ['Nymrissa Wavecaller',0,false]
+  ];
   var KILLS_N = [
-    ['Nymrissa Wavecaller',1,true],
     ["Nek'zali the Soulcoiler",3,true],
     ['Entombed Sentinels',2,true],
     ['The Lost Explorers',0,false],
@@ -842,7 +873,6 @@
     ["Ula'tek",0,false]
   ];
   var KILLS_H = [
-    ['Nymrissa Wavecaller',0,false],
     ["Nek'zali the Soulcoiler",0,false],
     ['Entombed Sentinels',0,false],
     ['The Lost Explorers',0,false],
@@ -851,9 +881,6 @@
     ['The Twin Fangs',0,false],
     ['The Coiled Altar',0,false],
     ["Ula'tek",0,false]
-  ];
-  var KILLS_M = [
-    ['Nymrissa Wavecaller',0,false]
   ];
   (function () {
     var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
@@ -878,9 +905,11 @@
         box.appendChild(el);
       });
     };
+    renderKills('killsListNormalTG', KILLS_N_TG);
+    renderKills('killsListHeroicTG', KILLS_H_TG);
+    renderKills('killsListMythicTG', KILLS_M_TG);
     renderKills('killsListNormal', KILLS_N);
     renderKills('killsListHeroic', KILLS_H);
-    renderKills('killsListMythic', KILLS_M);
   })();
 
   // linha do tempo de presença — matriz real do WarcraftLogs (aba Attendance)
