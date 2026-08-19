@@ -359,6 +359,8 @@
   .att-table .night.upcoming, .att-table .tot.upcoming { background: transparent; opacity: .45; }
   .att-table .night.upcoming .dt, .att-table .night.upcoming .wd { color: var(--faint); }
   .att-table .cell { text-align: center; font-weight: 800; font-size: .95rem; height: 42px; }
+  .att-table .cell .dg { width: 19px; height: 19px; display: inline-block; vertical-align: middle; }
+  .att-table .cell.no .dg { opacity: .85; }
   .att-table tbody tr:hover td, .att-table tbody tr:hover .who { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
   .att-table .cell.ok { color: var(--good); }
   .att-table .cell.no { color: var(--faint); background: color-mix(in srgb, var(--crit) 6%, transparent); }
@@ -428,6 +430,23 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="dragon-v" viewBox="0 0 20 20">
+    <path d="M3 3 L10 15 L17 3" fill="none" stroke="#4fd6a0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M5.5 4.8 L7 6.6 M12.8 6.9 L14.3 5" fill="none" stroke="#4fd6a0" stroke-width="1.1" stroke-linecap="round" opacity=".65"/>
+    <path d="M2 1.6c1 .2 1.6 1 1.6 2" fill="none" stroke="#4fd6a0" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M15.6 1.2 L18 2.4 L17.3 4.6 Z" fill="#4fd6a0"/>
+    <circle cx="16.9" cy="2.6" r=".55" fill="#12101a"/>
+  </symbol>
+  <symbol id="dragon-x" viewBox="0 0 20 20">
+    <path d="M3 3 L17 17" fill="none" stroke="#ff6b6b" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M17 3 L3 17" fill="none" stroke="#ff6b6b" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M6.5 6.5 L8 8 M12 12 L13.5 13.5" fill="none" stroke="#ff6b6b" stroke-width="1.1" stroke-linecap="round" opacity=".65"/>
+    <path d="M15.6 1.2 L18 2.4 L17.3 4.6 Z" fill="#ff6b6b"/>
+    <circle cx="16.9" cy="2.6" r=".55" fill="#12101a"/>
+    <path d="M2 15.6c.2-1 1-1.6 2-1.6" fill="none" stroke="#ff6b6b" stroke-width="1.3" stroke-linecap="round"/>
+  </symbol>
+</svg>
 
 <nav class="side-nav" aria-label="Navegação rápida entre seções">
   <a href="#podio" data-section="podio" title="Liderança"><span class="tip">Liderança</span></a>
@@ -834,9 +853,9 @@
       [9, 29, 2026], [9, 30, 2026], [10, 6, 2026], [10, 7, 2026]
     ];
     // índice da última noite já realizada (-1 = nenhuma ainda). A partir daí as colunas ficam cinza.
-    var LAST_LOGGED = -1;
+    var LAST_LOGGED = 0;
     // presença real por jogador → { "M/D": 1|0 } — preencher conforme os logs saírem
-    var ATT = {};
+    var ATT = {"Bahryzta":{"8/18":1},"Ormot":{"8/18":1},"Athelìa":{"8/18":1},"Bacchus":{"8/18":1},"Buticodeoro":{"8/18":1},"Salkiing":{"8/18":1},"Tessagrayh":{"8/18":1},"Aloppes":{"8/18":1},"Carina":{"8/18":1},"Dïazepam":{"8/18":1},"Dracullaura":{"8/18":1},"Euridice":{"8/18":1},"Feanori":{"8/18":1},"Grömdak":{"8/18":1},"Hakarvyr":{"8/18":1},"Hyzor":{"8/18":1},"Inflexível":{"8/18":1},"Jazzkiler":{"8/18":1},"Kissuko":{"8/18":1},"Kolhberg":{"8/18":1},"Pervertido":{"8/18":1},"Riswen":{"8/18":1},"Saponáceo":{"8/18":1},"Seind":{"8/18":1},"Shanti":{"8/18":1},"Sicarious":{"8/18":1},"Tiagolargado":{"8/18":1},"Valunii":{"8/18":1}};
 
     var ALL = ROSTER.tank.concat(ROSTER.heal, ROSTER.dps);
     var ROLE_ICON = { tank: '🛡️', heal: '💚', dps: '⚔️' };
@@ -869,9 +888,11 @@
       var cells = keys.map(function (k, i) {
         var upcoming = (i > LAST_LOGGED);
         var here = ATT[p[0]] && ATT[p[0]][k];
-        if (upcoming) return '<td class="cell upcoming" title="' + p[0] + ' · ' + k + ' · noite futura">·</td>';
-        return '<td class="cell ' + (here ? 'ok' : 'no') + '" title="' + p[0] + ' · ' + k + ' · ' + (here ? 'presente' : 'sem dado') + '">' +
-          (here ? '✓' : '·') + '</td>';
+if (upcoming) return '<td class="cell upcoming" title="' + p[0] + ' · ' + k + ' · noite futura">·</td>';
+        var dragon = here
+          ? '<svg class="dg" viewBox="0 0 20 20"><use href="#dragon-v"></use></svg>'
+          : '<svg class="dg" viewBox="0 0 20 20"><use href="#dragon-x"></use></svg>';
+        return '<td class="cell ' + (here ? 'ok' : 'no') + '" title="' + p[0] + ' · ' + k + ' · ' + (here ? 'presente' : 'ausente') + '">' + dragon + '</td>';
       }).join('');
       return '<tr>' + '<th class="who">' + roleIco + av + '<span class="wn">' + p[0] + '</span></th>' + cells + '</tr>';
     }).join('') + '</tbody>';
