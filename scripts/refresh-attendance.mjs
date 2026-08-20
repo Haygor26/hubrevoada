@@ -4,8 +4,6 @@ const FILE = new URL('../index.html', import.meta.url);
 const CREDS_FILE = new URL('./.wcl-credentials.json', import.meta.url);
 
 function loadCredentials() {
-  const [argId, argSecret] = process.argv.slice(2);
-  if (argId && argSecret) return { clientId: argId, clientSecret: argSecret };
   if (process.env.WCL_CLIENT_ID && process.env.WCL_CLIENT_SECRET) {
     return { clientId: process.env.WCL_CLIENT_ID, clientSecret: process.env.WCL_CLIENT_SECRET };
   }
@@ -13,13 +11,9 @@ function loadCredentials() {
     const { clientId, clientSecret } = JSON.parse(fs.readFileSync(CREDS_FILE, 'utf8'));
     if (clientId && clientSecret) return { clientId, clientSecret };
   }
-  throw new Error('faltam credenciais: node refresh-attendance.mjs <client_id> <client_secret> (ou WCL_CLIENT_ID/WCL_CLIENT_SECRET, ou scripts/.wcl-credentials.json)');
+  throw new Error('faltam credenciais: defina WCL_CLIENT_ID/WCL_CLIENT_SECRET ou scripts/.wcl-credentials.json');
 }
 
-const GUILD_NAME = 'Revoada Bafônica';
-const GUILD_SERVER_SLUG = 'azralon';
-const GUILD_SERVER_REGION = 'US';
-const LOG_OWNERS = ['mattchi', 'victoriarf']; // owners dos logs de core, case-insensitive
 const TIMEZONE = 'America/Sao_Paulo';
 
 function stripAccents(s) {
@@ -49,49 +43,28 @@ async function gql(token, query, variables) {
   return d.data;
 }
 
-async function fetchGuildReports(token, startTime, endTime) {
-  const query = `
-    query($name: String!, $slug: String!, $region: String!, $page: Int, $startTime: Float, $endTime: Float) {
-      reportData {
-        reports(guildName: $name, guildServerSlug: $slug, guildServerRegion: $region, page: $page, startTime: $startTime, endTime: $endTime) {
-          data { code startTime owner { name } }
-          has_more_pages
-        }
-      }
-    }`;
-  let all = [];
-  let page = 1;
-  while (true) {
-    const data = await gql(token, query, {
-      name: GUILD_NAME, slug: GUILD_SERVER_SLUG, region: GUILD_SERVER_REGION,
-      page, startTime, endTime
-    });
-    const { data: rows, has_more_pages } = data.reportData.reports;
-    all = all.concat(rows);
-    if (!has_more_pages) break;
-    page++;
-  }
-  return all;
-}
-
-async function fetchReportAttendees(token, code) {
+async function fetchReport(token, code) {
   const query = `
     query($code: String!) {
       reportData {
         report(code: $code) {
+          startTime
+          owner { name }
           playerDetails(translate: true, startTime: 0, endTime: 999999999)
         }
       }
     }`;
   const data = await gql(token, query, { code });
-  let pd = data.reportData.report.playerDetails;
+  const report = data.reportData.report;
+  if (!report) throw new Error(`report ${code} não encontrado (código errado?)`);
+  let pd = report.playerDetails;
   if (typeof pd === 'string') pd = JSON.parse(pd);
   const details = pd?.data?.playerDetails || pd?.playerDetails || pd || {};
   const names = [];
   for (const bucket of ['tanks', 'healers', 'dps']) {
     for (const p of details[bucket] || []) if (p?.name) names.push(p.name);
   }
-  return names;
+  return { startTime: report.startTime, owner: report.owner?.name, names };
 }
 
 function nightKeyFromTimestamp(ms) {
@@ -102,6 +75,12 @@ function nightKeyFromTimestamp(ms) {
 }
 
 async function main() {
+  const codes = process.argv.slice(2);
+  if (codes.length === 0) {
+    throw new Error('usage: node refresh-attendance.mjs <reportCode1> [reportCode2] ...\n' +
+      '(busca por guilda não funciona — reports da guild são privados e client_credentials não os enxerga; sempre passar o código do report direto)');
+  }
+
   const { clientId, clientSecret } = loadCredentials();
   let html = fs.readFileSync(FILE, 'utf8');
 
@@ -113,42 +92,49 @@ async function main() {
   const rosterNames = [...html.matchAll(/\['([^']+)','[a-z]+','[^']+',\d+,'[a-z0-9-]+',\d+\]/g)].map(m => m[1]);
   const rosterByNormalized = new Map(rosterNames.map(n => [stripAccents(n), n]));
 
-  const firstNight = Date.UTC(NIGHTS[0][2], NIGHTS[0][0] - 1, NIGHTS[0][1]) - 12 * 3600 * 1000;
-  const lastNight = Date.UTC(NIGHTS[NIGHTS.length - 1][2], NIGHTS[NIGHTS.length - 1][0] - 1, NIGHTS[NIGHTS.length - 1][1]) + 36 * 3600 * 1000;
+  const attMatch = html.match(/var ATT = (\{[\s\S]*?\});/);
+  const lastLoggedMatch = html.match(/var LAST_LOGGED = (-?\d+);/);
+  if (!attMatch || !lastLoggedMatch) throw new Error('ATT/LAST_LOGGED não encontrados no index.html');
+  const ATT = JSON.parse(attMatch[1]);
+  let lastLogged = Number(lastLoggedMatch[1]);
 
   console.log('Autenticando na WarcraftLogs...');
   const token = await getToken(clientId, clientSecret);
 
-  console.log('Buscando reports da guild...');
-  const reports = await fetchGuildReports(token, firstNight / 1000, lastNight / 1000);
-  const coreReports = reports.filter(r => LOG_OWNERS.includes((r.owner?.name || '').toLowerCase()));
-  console.log(`${reports.length} reports no período, ${coreReports.length} de owners de core (${LOG_OWNERS.join(', ')}).`);
-
-  const ATT = {};
-  const loggedNightKeys = new Set();
-
-  for (const report of coreReports) {
-    const key = nightKeyFromTimestamp(report.startTime);
-    if (!nightKeys.includes(key)) continue; // fora das noites de core cadastradas
-    console.log(`  lendo report ${report.code} (${key})...`);
-    const names = await fetchReportAttendees(token, report.code);
-    loggedNightKeys.add(key);
+  const touchedKeys = new Set();
+  for (const code of codes) {
+    console.log(`Lendo report ${code}...`);
+    const { startTime, owner, names } = await fetchReport(token, code);
+    const key = nightKeyFromTimestamp(startTime);
+    if (!nightKeys.includes(key)) {
+      console.log(`  AVISO: noite ${key} (owner ${owner}) não está em NIGHTS, pulando.`);
+      continue;
+    }
+    console.log(`  noite ${key}, owner ${owner}, ${names.length} jogadores no log.`);
+    let matched = 0;
     for (const rawName of names) {
       const rosterName = rosterByNormalized.get(stripAccents(rawName));
       if (!rosterName) continue; // personagem fora do roster (alt, trial, etc.)
       ATT[rosterName] = ATT[rosterName] || {};
       ATT[rosterName][key] = 1;
+      matched++;
     }
+    console.log(`  ${matched} bateram com o roster.`);
+    touchedKeys.add(key);
   }
 
-  let lastLogged = -1;
-  nightKeys.forEach((k, i) => { if (loggedNightKeys.has(k)) lastLogged = i; });
+  if (touchedKeys.size === 0) {
+    console.log('Nenhuma noite válida processada — nada foi alterado no arquivo.');
+    return;
+  }
+
+  nightKeys.forEach((k, i) => { if (touchedKeys.has(k) && i > lastLogged) lastLogged = i; });
 
   html = html.replace(/var LAST_LOGGED = -?\d+;/, `var LAST_LOGGED = ${lastLogged};`);
   html = html.replace(/var ATT = \{[\s\S]*?\};/, `var ATT = ${JSON.stringify(ATT)};`);
 
   fs.writeFileSync(FILE, html, 'utf8');
-  console.log(`Pronto. ${loggedNightKeys.size} noites com log, LAST_LOGGED=${lastLogged}.`);
+  console.log(`Pronto. Noites atualizadas: ${[...touchedKeys].join(', ')}. LAST_LOGGED=${lastLogged}.`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
