@@ -14,6 +14,10 @@ function loadCredentials() {
   throw new Error('faltam credenciais: defina WCL_CLIENT_ID/WCL_CLIENT_SECRET ou scripts/.wcl-credentials.json');
 }
 
+// WCL guild id (NÃO é o guild id do Raider.io, é outro número) — descoberto via
+// guildData.guild(name, serverSlug, serverRegion) ou reportData.report(code).guild.id
+const GUILD_ID = 693273;
+const LOG_OWNERS = ['mattchi', 'victoriarf']; // owners dos logs de core, case-insensitive
 const TIMEZONE = 'America/Sao_Paulo';
 
 function stripAccents(s) {
@@ -43,28 +47,48 @@ async function gql(token, query, variables) {
   return d.data;
 }
 
-async function fetchReport(token, code) {
+async function fetchGuildReports(token, startTime, endTime) {
+  // IMPORTANTE: usar guildID (numérico), NÃO guildName/guildServerSlug/guildServerRegion —
+  // essa segunda forma retorna vazio pra reports marcados privados. guildID enxerga tudo.
+  const query = `
+    query($guildID: Int!, $page: Int, $startTime: Float, $endTime: Float) {
+      reportData {
+        reports(guildID: $guildID, page: $page, startTime: $startTime, endTime: $endTime) {
+          data { code startTime owner { name } }
+          has_more_pages
+        }
+      }
+    }`;
+  let all = [];
+  let page = 1;
+  while (true) {
+    const data = await gql(token, query, { guildID: GUILD_ID, page, startTime, endTime });
+    const { data: rows, has_more_pages } = data.reportData.reports;
+    all = all.concat(rows);
+    if (!has_more_pages) break;
+    page++;
+  }
+  return all;
+}
+
+async function fetchReportAttendees(token, code) {
   const query = `
     query($code: String!) {
       reportData {
         report(code: $code) {
-          startTime
-          owner { name }
           playerDetails(translate: true, startTime: 0, endTime: 999999999)
         }
       }
     }`;
   const data = await gql(token, query, { code });
-  const report = data.reportData.report;
-  if (!report) throw new Error(`report ${code} não encontrado (código errado?)`);
-  let pd = report.playerDetails;
+  let pd = data.reportData.report.playerDetails;
   if (typeof pd === 'string') pd = JSON.parse(pd);
   const details = pd?.data?.playerDetails || pd?.playerDetails || pd || {};
   const names = [];
   for (const bucket of ['tanks', 'healers', 'dps']) {
     for (const p of details[bucket] || []) if (p?.name) names.push(p.name);
   }
-  return { startTime: report.startTime, owner: report.owner?.name, names };
+  return names;
 }
 
 function nightKeyFromTimestamp(ms) {
@@ -75,11 +99,7 @@ function nightKeyFromTimestamp(ms) {
 }
 
 async function main() {
-  const codes = process.argv.slice(2);
-  if (codes.length === 0) {
-    throw new Error('usage: node refresh-attendance.mjs <reportCode1> [reportCode2] ...\n' +
-      '(busca por guilda não funciona — reports da guild são privados e client_credentials não os enxerga; sempre passar o código do report direto)');
-  }
+  const explicitCodes = process.argv.slice(2);
 
   const { clientId, clientSecret } = loadCredentials();
   let html = fs.readFileSync(FILE, 'utf8');
@@ -101,16 +121,44 @@ async function main() {
   console.log('Autenticando na WarcraftLogs...');
   const token = await getToken(clientId, clientSecret);
 
+  let codesToProcess;
+  if (explicitCodes.length > 0) {
+    console.log(`Usando ${explicitCodes.length} código(s) passado(s) na linha de comando.`);
+    codesToProcess = explicitCodes;
+  } else {
+    console.log('Buscando reports da guild (por guildID)...');
+    const firstNight = Date.UTC(NIGHTS[0][2], NIGHTS[0][0] - 1, NIGHTS[0][1]) - 12 * 3600 * 1000;
+    const lastNight = Date.UTC(NIGHTS[NIGHTS.length - 1][2], NIGHTS[NIGHTS.length - 1][0] - 1, NIGHTS[NIGHTS.length - 1][1]) + 36 * 3600 * 1000;
+    const reports = await fetchGuildReports(token, firstNight, lastNight);
+    const coreReports = reports.filter(r => LOG_OWNERS.includes((r.owner?.name || '').toLowerCase()));
+    console.log(`${reports.length} reports no período, ${coreReports.length} de owners de core (${LOG_OWNERS.join(', ')}).`);
+    codesToProcess = coreReports.map(r => r.code);
+  }
+
+  if (codesToProcess.length === 0) {
+    console.log('Nenhum report pra processar — nada foi alterado no arquivo.');
+    return;
+  }
+
   const touchedKeys = new Set();
-  for (const code of codes) {
+  for (const code of codesToProcess) {
     console.log(`Lendo report ${code}...`);
-    const { startTime, owner, names } = await fetchReport(token, code);
-    const key = nightKeyFromTimestamp(startTime);
-    if (!nightKeys.includes(key)) {
-      console.log(`  AVISO: noite ${key} (owner ${owner}) não está em NIGHTS, pulando.`);
+    let startTime, names;
+    try {
+      const q = `query($code: String!) { reportData { report(code: $code) { startTime owner { name } } } }`;
+      const meta = await gql(token, q, { code });
+      startTime = meta.reportData.report.startTime;
+      names = await fetchReportAttendees(token, code);
+    } catch (err) {
+      console.log(`  ERRO: ${err.message}`);
       continue;
     }
-    console.log(`  noite ${key}, owner ${owner}, ${names.length} jogadores no log.`);
+    const key = nightKeyFromTimestamp(startTime);
+    if (!nightKeys.includes(key)) {
+      console.log(`  AVISO: noite ${key} não está em NIGHTS, pulando.`);
+      continue;
+    }
+    console.log(`  noite ${key}, ${names.length} jogadores no log.`);
     let matched = 0;
     for (const rawName of names) {
       const rosterName = rosterByNormalized.get(stripAccents(rawName));
