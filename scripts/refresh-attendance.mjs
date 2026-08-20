@@ -20,6 +20,20 @@ const GUILD_ID = 693273;
 const LOG_OWNERS = ['mattchi', 'victoriarf']; // owners dos logs de core, case-insensitive
 const TIMEZONE = 'America/Sao_Paulo';
 
+// bosses rastreados no Pulls, na ordem exibida no site — precisa bater com os KILLS_* do index.html
+const VA_BOSSES = [
+  ["Nek'zali the Soulcoiler", 3470],
+  ['Entombed Sentinels', 3445],
+  ['The Lost Explorers', 3497],
+  ['Vashnik the Malignant', 3455],
+  ['Sszorak', 3420],
+  ['The Twin Fangs', 3421],
+  ['The Coiled Altar', 3429],
+  ["Ula'tek", 3492]
+];
+const TG_BOSSES = [['Nymrissa Wavecaller', 3379]];
+const DIFF = { normal: 3, heroic: 4, mythic: 5 };
+
 function stripAccents(s) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
@@ -71,24 +85,29 @@ async function fetchGuildReports(token, startTime, endTime) {
   return all;
 }
 
-async function fetchReportAttendees(token, code) {
+async function fetchReportDetails(token, code) {
   const query = `
     query($code: String!) {
       reportData {
         report(code: $code) {
+          startTime
+          owner { name }
           playerDetails(translate: true, startTime: 0, endTime: 999999999)
+          fights { name kill difficulty encounterID }
         }
       }
     }`;
   const data = await gql(token, query, { code });
-  let pd = data.reportData.report.playerDetails;
+  const report = data.reportData.report;
+  if (!report) throw new Error(`report ${code} não encontrado (código errado?)`);
+  let pd = report.playerDetails;
   if (typeof pd === 'string') pd = JSON.parse(pd);
   const details = pd?.data?.playerDetails || pd?.playerDetails || pd || {};
   const names = [];
   for (const bucket of ['tanks', 'healers', 'dps']) {
     for (const p of details[bucket] || []) if (p?.name) names.push(p.name);
   }
-  return names;
+  return { startTime: report.startTime, owner: report.owner?.name, names, fights: report.fights || [] };
 }
 
 function nightKeyFromTimestamp(ms) {
@@ -98,8 +117,75 @@ function nightKeyFromTimestamp(ms) {
   return `${Number(parts.month)}/${Number(parts.day)}`;
 }
 
+// tally de pulls/kill por encounterID+dificuldade a partir da lista de fights de 1 report
+function tallyFights(fights) {
+  const tally = {};
+  for (const f of fights) {
+    if (!f.encounterID || !f.difficulty) continue;
+    const key = f.encounterID + ':' + f.difficulty;
+    tally[key] = tally[key] || { pulls: 0, killed: false };
+    tally[key].pulls++;
+    if (f.kill) tally[key].killed = true;
+  }
+  return tally;
+}
+
+// combina o tally de vários reports da MESMA noite (loggers duplicados) pegando o
+// máximo de pulls em vez de somar — evita contar a mesma sessão duas vezes
+function mergeSameNightTallies(tallies) {
+  const merged = {};
+  for (const t of tallies) {
+    for (const key of Object.keys(t)) {
+      merged[key] = merged[key] || { pulls: 0, killed: false };
+      merged[key].pulls = Math.max(merged[key].pulls, t[key].pulls);
+      merged[key].killed = merged[key].killed || t[key].killed;
+    }
+  }
+  return merged;
+}
+
+// soma os tallies (já deduplicados por noite) de noites DIFERENTES — aí sim acumula
+function sumTallies(tallies) {
+  const summed = {};
+  for (const t of tallies) {
+    for (const key of Object.keys(t)) {
+      summed[key] = summed[key] || { pulls: 0, killed: false };
+      summed[key].pulls += t[key].pulls;
+      summed[key].killed = summed[key].killed || t[key].killed;
+    }
+  }
+  return summed;
+}
+
+// monta o array [[nome, pulls, killed], ...] pra uma dificuldade, a partir do tally agregado
+function buildKillsArray(bossList, difficulty, tally) {
+  return bossList.map(([name, encounterID]) => {
+    const t = tally[encounterID + ':' + difficulty];
+    return [name, t ? t.pulls : 0, t ? t.killed : false];
+  });
+}
+
+function replaceArray(html, varName, arr) {
+  const re = new RegExp(`var ${varName} = \\[[\\s\\S]*?\\];`);
+  if (!re.test(html)) throw new Error(`${varName} não encontrado no index.html`);
+  const literal = '[\n    ' + arr.map(([n, p, k]) => `[${JSON.stringify(n)},${p},${k}]`).join(',\n    ') + '\n  ]';
+  return html.replace(re, `var ${varName} = ${literal};`);
+}
+
+function updateProgressCard(html, killedVA, killedTG) {
+  const totalNormal = killedVA + killedTG;
+  const totalBosses = VA_BOSSES.length + TG_BOSSES.length;
+  const pct = (totalNormal / totalBosses * 100).toFixed(1).replace(/\.0$/, '');
+  html = html.replace(/<span class="lbl">Normal<\/span><b>\d+ \/ 9<\/b>/, `<span class="lbl">Normal</span><b>${totalNormal} / 9</b>`);
+  html = html.replace(/<div class="fill n" data-w="[\d.]+"><\/div>/, `<div class="fill n" data-w="${pct}"></div>`);
+  html = html.replace(/<span class="k">\d+\/9<\/span><span class="l">Normal · [^<]*<\/span>/, `<span class="k">${totalNormal}/9</span><span class="l">Normal · em progressão</span>`);
+  html = html.replace(/<span class="hint">\d+\/9 chefes abatidos no Normal<\/span>/, `<span class="hint">${totalNormal}/9 chefes abatidos no Normal</span>`);
+  return html;
+}
+
 async function main() {
   const explicitCodes = process.argv.slice(2);
+  const isAutoMode = explicitCodes.length === 0;
 
   const { clientId, clientSecret } = loadCredentials();
   let html = fs.readFileSync(FILE, 'utf8');
@@ -122,7 +208,7 @@ async function main() {
   const token = await getToken(clientId, clientSecret);
 
   let codesToProcess;
-  if (explicitCodes.length > 0) {
+  if (!isAutoMode) {
     console.log(`Usando ${explicitCodes.length} código(s) passado(s) na linha de comando.`);
     codesToProcess = explicitCodes;
   } else {
@@ -141,48 +227,82 @@ async function main() {
   }
 
   const touchedKeys = new Set();
+  const tallyByNight = {}; // nightKey -> [tally1, tally2, ...] (um tally por report daquela noite)
+
   for (const code of codesToProcess) {
     console.log(`Lendo report ${code}...`);
-    let startTime, names;
+    let rep;
     try {
-      const q = `query($code: String!) { reportData { report(code: $code) { startTime owner { name } } } }`;
-      const meta = await gql(token, q, { code });
-      startTime = meta.reportData.report.startTime;
-      names = await fetchReportAttendees(token, code);
+      rep = await fetchReportDetails(token, code);
     } catch (err) {
       console.log(`  ERRO: ${err.message}`);
       continue;
     }
-    const key = nightKeyFromTimestamp(startTime);
+    const key = nightKeyFromTimestamp(rep.startTime);
+    (tallyByNight[key] = tallyByNight[key] || []).push(tallyFights(rep.fights));
     if (!nightKeys.includes(key)) {
-      console.log(`  AVISO: noite ${key} não está em NIGHTS, pulando.`);
-      continue;
+      console.log(`  AVISO: noite ${key} não está em NIGHTS (attendance pulada, mas kills contam).`);
+    } else {
+      console.log(`  noite ${key}, ${rep.names.length} jogadores no log.`);
+      let matched = 0;
+      for (const rawName of rep.names) {
+        const rosterName = rosterByNormalized.get(stripAccents(rawName));
+        if (!rosterName) continue;
+        ATT[rosterName] = ATT[rosterName] || {};
+        ATT[rosterName][key] = 1;
+        matched++;
+      }
+      console.log(`  ${matched} bateram com o roster.`);
+      touchedKeys.add(key);
     }
-    console.log(`  noite ${key}, ${names.length} jogadores no log.`);
-    let matched = 0;
-    for (const rawName of names) {
-      const rosterName = rosterByNormalized.get(stripAccents(rawName));
-      if (!rosterName) continue; // personagem fora do roster (alt, trial, etc.)
-      ATT[rosterName] = ATT[rosterName] || {};
-      ATT[rosterName][key] = 1;
-      matched++;
-    }
-    console.log(`  ${matched} bateram com o roster.`);
-    touchedKeys.add(key);
   }
 
-  if (touchedKeys.size === 0) {
-    console.log('Nenhuma noite válida processada — nada foi alterado no arquivo.');
-    return;
+  if (touchedKeys.size > 0) {
+    nightKeys.forEach((k, i) => { if (touchedKeys.has(k) && i > lastLogged) lastLogged = i; });
+    html = html.replace(/var LAST_LOGGED = -?\d+;/, `var LAST_LOGGED = ${lastLogged};`);
+    html = html.replace(/var ATT = \{[\s\S]*?\};/, `var ATT = ${JSON.stringify(ATT)};`);
+    console.log(`Presença: noites atualizadas ${[...touchedKeys].join(', ')}. LAST_LOGGED=${lastLogged}.`);
+  } else {
+    console.log('Presença: nenhuma noite válida processada.');
   }
 
-  nightKeys.forEach((k, i) => { if (touchedKeys.has(k) && i > lastLogged) lastLogged = i; });
+  // --- kills/pulls ---
+  // modo auto: guildID search já cobre a temporada inteira -> recalcula os arrays do zero (sem risco de duplicar pulls)
+  // modo explícito (códigos passados na mão): só temos ESSES reports, então faz merge (máximo) com o que já tava salvo
+  function mergeKillsArray(existingVarName, freshArr) {
+    if (isAutoMode) return freshArr;
+    const m = html.match(new RegExp(`var ${existingVarName} = (\\[[\\s\\S]*?\\]);`));
+    if (!m) return freshArr;
+    const existing = JSON.parse(m[1]);
+    return freshArr.map(([name, pulls, killed], i) => {
+      const old = existing[i] || [name, 0, false];
+      return [name, Math.max(pulls, old[1]), killed || old[2]];
+    });
+  }
 
-  html = html.replace(/var LAST_LOGGED = -?\d+;/, `var LAST_LOGGED = ${lastLogged};`);
-  html = html.replace(/var ATT = \{[\s\S]*?\};/, `var ATT = ${JSON.stringify(ATT)};`);
+  // dedup: várias reports da mesma noite (loggers em paralelo) viram 1 tally (máximo);
+  // depois soma entre noites diferentes pra acumular pulls de verdade ao longo da season
+  const fightsTally = sumTallies(Object.values(tallyByNight).map(mergeSameNightTallies));
+
+  const vaNormal = mergeKillsArray('KILLS_N', buildKillsArray(VA_BOSSES, DIFF.normal, fightsTally));
+  const vaHeroic = mergeKillsArray('KILLS_H', buildKillsArray(VA_BOSSES, DIFF.heroic, fightsTally));
+  const tgNormal = mergeKillsArray('KILLS_N_TG', buildKillsArray(TG_BOSSES, DIFF.normal, fightsTally));
+  const tgHeroic = mergeKillsArray('KILLS_H_TG', buildKillsArray(TG_BOSSES, DIFF.heroic, fightsTally));
+  const tgMythic = mergeKillsArray('KILLS_M_TG', buildKillsArray(TG_BOSSES, DIFF.mythic, fightsTally));
+
+  html = replaceArray(html, 'KILLS_N', vaNormal);
+  html = replaceArray(html, 'KILLS_H', vaHeroic);
+  html = replaceArray(html, 'KILLS_N_TG', tgNormal);
+  html = replaceArray(html, 'KILLS_H_TG', tgHeroic);
+  html = replaceArray(html, 'KILLS_M_TG', tgMythic);
+
+  const killedVA = vaNormal.filter(([, , k]) => k).length;
+  const killedTG = tgNormal.filter(([, , k]) => k).length;
+  html = updateProgressCard(html, killedVA, killedTG);
 
   fs.writeFileSync(FILE, html, 'utf8');
-  console.log(`Pronto. Noites atualizadas: ${[...touchedKeys].join(', ')}. LAST_LOGGED=${lastLogged}.`);
+  console.log(`Kills: Venomous Abyss ${killedVA}/${VA_BOSSES.length} Normal, Tidebound Grotto ${killedTG}/${TG_BOSSES.length} Normal.`);
+  console.log('Pronto.');
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
