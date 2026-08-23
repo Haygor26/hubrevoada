@@ -285,7 +285,7 @@
     box-shadow: 0 0 8px -3px var(--cc); }
   .members .m .cl { display: block; margin-top: 4px; font-size: .82rem; font-weight: 600;
     color: var(--cc); white-space: normal; overflow: visible; text-overflow: clip; word-break: break-word; }
-  .members .m .badges { flex: none; display: flex; align-items: center; gap: 8px; }
+  .members .m .badges { flex-basis: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 4px; }
   .members .m .io-badge { flex: none; text-align: center; font: 800 .92rem/1 var(--mono); font-variant-numeric: tabular-nums;
     color: #fff;
     text-shadow: -1px 0 #000, 1px 0 #000, 0 -1px #000, 0 1px #000, -1px -1px #000, 1px -1px #000, -1px 1px #000, 1px 1px #000;
@@ -824,11 +824,9 @@
       var crest = por
         ? '<span class="crest" style="background-image:url(' + por + ')"></span>'
         : '<span class="crest crest-init">' + p[0].charAt(0).toUpperCase() + '</span>';
-      var ico = (typeof SPECICONS !== 'undefined') && SPECICONS[p[5]];
-      var icoHtml = ico ? '<img class="spec-ico" src="' + ico + '" alt="' + p[2] + '" title="' + p[2] + '">' : '';
       var ilvlTier = p[3] >= 285 ? 'good' : (p[3] >= 280 ? 'warn' : 'crit');
       el.innerHTML = crest +
-        '<span class="info"><span class="nm"><span class="nmtxt">' + p[0] + '</span>' + icoHtml + '</span>' +
+        '<span class="info"><span class="nm"><span class="nmtxt">' + p[0] + '</span></span>' +
         '<span class="cl">' + c[0] + '</span></span>' +
         '<span class="badges">' +
         '<span class="io-badge" data-name="' + p[0] + '" data-realm="' + p[4] + '" data-url="' + rioUrl(p[0], p[4]) + '" title="Ver ' + p[0] + ' no Raider.IO"><small>io</small><span class="io-val">···</span></span>' +
