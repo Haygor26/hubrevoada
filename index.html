@@ -285,6 +285,13 @@
     box-shadow: 0 0 8px -3px var(--cc); }
   .members .m .cl { display: block; margin-top: 4px; font-size: .82rem; font-weight: 600;
     color: var(--cc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .members .m .io-badge { flex: none; display: flex; align-items: center; justify-content: center;
+    height: 34px; padding: 0 10px; border-radius: 9px;
+    background: #fff; color: #1a1a1a; font: 700 .74rem/1 var(--font);
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    cursor: pointer; transition: transform .15s, box-shadow .15s; }
+  .members .m .io-badge:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.3); }
+  .members .m .io-badge b { color: #6d3bd1; margin-left: 2px; }
   .members .m .ilvl { flex: none; text-align: center; font: 800 .92rem/1 var(--mono); font-variant-numeric: tabular-nums;
     color: #fff;
     text-shadow: -1px 0 #000, 1px 0 #000, 0 -1px #000, 0 1px #000, -1px -1px #000, 1px -1px #000, -1px 1px #000, 1px 1px #000;
@@ -762,6 +769,9 @@
   function wclUrl(name, realm) {
     return 'https://www.warcraftlogs.com/character/us/' + realm + '/' + encodeURIComponent(name);
   }
+  function rioUrl(name, realm) {
+    return 'https://raider.io/characters/us/' + realm + '/' + encodeURIComponent(name);
+  }
   (function () {
     var total = document.getElementById('rosterTotal');
     if (total) total.textContent = ROSTER.tank.length + ROSTER.heal.length + ROSTER.dps.length + ' no total';
@@ -817,7 +827,13 @@
       el.innerHTML = crest +
         '<span class="info"><span class="nm"><span class="nmtxt">' + p[0] + '</span>' + icoHtml + '</span>' +
         '<span class="cl">' + c[0] + '</span></span>' +
+        '<span class="io-badge" data-url="' + rioUrl(p[0], p[4]) + '" title="Ver ' + p[0] + ' no Raider.IO">Raider<b>.IO</b></span>' +
         '<span class="ilvl ilvl-' + ilvlTier + '"><small>ilvl</small>' + p[3] + '</span>';
+      el.querySelector('.io-badge').addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        window.open(this.dataset.url, '_blank', 'noopener,noreferrer');
+      });
       box.appendChild(el);
     });
   });
