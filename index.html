@@ -7,6 +7,9 @@
 <title>Revoada Bafônica — Hub da Season</title>
 <meta name="description" content="Cronograma, roster e progressão do core Revoada Bafônica — Patch 12.1, The Venomous Abyss.">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" sizes="32x32" href="https://haygor26.github.io/hubrevoada/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="https://haygor26.github.io/hubrevoada/favicon-512.png">
 <link rel="apple-touch-icon" href="https://haygor26.github.io/hubrevoada/apple-touch-icon.png">
@@ -317,7 +320,7 @@
   .key-row:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
   .key-row .kicon { flex: none; width: 38px; height: 38px; border-radius: 9px; border: 1px solid var(--line); object-fit: cover; }
   .key-row .klvl { flex: none; width: 46px; box-sizing: border-box; text-align: center;
-    font: 800 1rem/1 var(--mono); font-variant-numeric: tabular-nums;
+    font: 700 1.05rem/1 'Fredoka', var(--font); font-variant-numeric: tabular-nums;
     padding: 6px 4px; border-radius: 9px; color: #fff;
     text-shadow: -1px 0 #000, 1px 0 #000, 0 -1px #000, 0 1px #000; }
   .key-row .klvl.timed { background: linear-gradient(90deg, var(--good), #3fb6ff); }
@@ -325,10 +328,10 @@
   .key-row .kstars { flex: none; width: 16px; display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 2px; color: var(--warn); font-size: .68rem; line-height: 1; }
   .key-row .kstars.depleted { color: var(--crit); font-size: .85rem; }
-  .key-row .kmid { flex: 1; min-width: 0; }
-  .key-row .kdungeon { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .key-row .kmid { flex: 1; min-width: 0; margin-right: 8px; }
+  .key-row .kdungeon { font: 700 1rem/1.2 'Fredoka', var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .key-row .kwho { font-weight: 700; font-size: .85rem; }
-  .key-row .kright { flex: none; width: 132px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .key-row .kright { flex: none; width: 118px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
   .key-row .kmargin { display: inline-flex; font: 800 .72rem/1.3 var(--mono); text-align: right;
     padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
   .key-row .kmargin.timed { color: #3ddc84; background: rgba(61, 220, 132, .16); }
@@ -944,7 +947,7 @@
         }).join(', ');
         var marginMs = r.par_time_ms - r.clear_time_ms;
         var pct = (Math.abs(marginMs) / r.par_time_ms * 100).toFixed(1);
-        var marginText = (timed ? 'Vencida por ' : 'Estourou por ') + formatClock(Math.abs(marginMs)) + ' (' + pct + '%)';
+        var marginText = (timed ? 'Timou por ' : 'Quebrou por ') + formatClock(Math.abs(marginMs)) + ' (' + pct + '%)';
         return '<a class="key-row" href="' + r.url + '" target="_blank" rel="noopener noreferrer">' +
           '<img class="kicon" src="' + r.icon_url + '" alt="" loading="lazy">' +
           '<span class="klvl ' + (timed ? 'timed' : 'depleted') + '">+' + r.mythic_level + '</span>' +
