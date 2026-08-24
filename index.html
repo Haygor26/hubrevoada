@@ -329,9 +329,10 @@
   .key-row .kdungeon { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .key-row .kwho { font-weight: 700; font-size: .85rem; }
   .key-row .kright { flex: none; width: 132px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
-  .key-row .kmargin { font: 800 .76rem/1.2 var(--mono); text-align: right; }
-  .key-row .kmargin.timed { color: var(--good); }
-  .key-row .kmargin.depleted { color: var(--crit); }
+  .key-row .kmargin { display: inline-flex; font: 800 .72rem/1.3 var(--mono); text-align: right;
+    padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+  .key-row .kmargin.timed { color: #3ddc84; background: rgba(61, 220, 132, .16); }
+  .key-row .kmargin.depleted { color: var(--crit); background: rgba(255, 107, 107, .16); }
   .key-row .kwhen { color: var(--faint); font: 600 .72rem/1 var(--mono); white-space: nowrap; }
   .members .m::after { content: "↗"; position: absolute; top: 8px; right: 10px; font-size: .8rem;
     color: var(--cc); opacity: 0; transform: translateY(2px); transition: opacity .2s, transform .2s; }
@@ -942,9 +943,8 @@
           return '<span style="color:' + cc + '">' + name + '</span>';
         }).join(', ');
         var marginMs = r.par_time_ms - r.clear_time_ms;
-        var marginText = timed
-          ? 'Vencida com ' + formatDuration(marginMs) + ' de sobra'
-          : 'Estourou o tempo em ' + formatDuration(-marginMs);
+        var pct = (Math.abs(marginMs) / r.par_time_ms * 100).toFixed(1);
+        var marginText = (timed ? 'Vencida por ' : 'Estourou por ') + formatClock(Math.abs(marginMs)) + ' (' + pct + '%)';
         return '<a class="key-row" href="' + r.url + '" target="_blank" rel="noopener noreferrer">' +
           '<img class="kicon" src="' + r.icon_url + '" alt="" loading="lazy">' +
           '<span class="klvl ' + (timed ? 'timed' : 'depleted') + '">+' + r.mythic_level + '</span>' +
@@ -970,6 +970,13 @@
       var m = Math.floor(totalSec / 60), s = totalSec % 60;
       if (m === 0) return s + 's';
       return m + 'min' + (s ? ' ' + s + 's' : '');
+    }
+
+    function formatClock(ms) {
+      var totalSec = Math.max(ms, 0) / 1000;
+      var m = Math.floor(totalSec / 60);
+      var s = totalSec - m * 60;
+      return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1);
     }
   })();
 
