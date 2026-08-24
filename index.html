@@ -890,7 +890,7 @@
   });
 
   // busca pontuação Mythic+, ilvl e chaves recentes (raider.io) de cada personagem
-  (function () {
+  function refreshRaiderIoData() {
     var allRuns = [];
     var fetches = [];
     document.querySelectorAll('.io-badge').forEach(function (badge) {
@@ -994,7 +994,10 @@
       var s = totalSec - m * 60;
       return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1);
     }
-  })();
+  }
+  refreshRaiderIoData();
+  if (window.rioRefreshInterval) clearInterval(window.rioRefreshInterval);
+  window.rioRefreshInterval = setInterval(refreshRaiderIoData, 5 * 60 * 1000);
 
   // pódio: preenche os portraits (GM + laterais)
   (function () {
