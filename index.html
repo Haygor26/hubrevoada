@@ -830,7 +830,7 @@
         '<span class="cl">' + c[0] + '</span></span>' +
         '<span class="badges">' +
         '<span class="io-badge" data-name="' + p[0] + '" data-realm="' + p[4] + '" data-url="' + rioUrl(p[0], p[4]) + '" title="Ver ' + p[0] + ' no Raider.IO"><small>io</small><span class="io-val">···</span></span>' +
-        '<span class="ilvl ilvl-' + ilvlTier + '"><small>ilvl</small>' + p[3] + '</span>' +
+        '<span class="ilvl ilvl-' + ilvlTier + '" data-name="' + p[0] + '" data-realm="' + p[4] + '"><small>ilvl</small><span class="ilvl-val">' + p[3] + '</span></span>' +
         '</span>';
       el.querySelector('.io-badge').addEventListener('click', function (ev) {
         ev.preventDefault();
@@ -841,17 +841,25 @@
     });
   });
 
-  // busca a pontuação Mythic+ (raider.io) de cada personagem e preenche o badge
+  // busca pontuação Mythic+ e ilvl (raider.io) de cada personagem e preenche os badges
   (function () {
     document.querySelectorAll('.io-badge').forEach(function (badge) {
       var name = badge.dataset.name, realm = badge.dataset.realm;
+      var ilvlEl = document.querySelector('.ilvl[data-name="' + CSS.escape(name) + '"][data-realm="' + CSS.escape(realm) + '"]');
       var api = 'https://raider.io/api/v1/characters/profile?region=us&realm=' + encodeURIComponent(realm) +
-        '&name=' + encodeURIComponent(name) + '&fields=mythic_plus_scores_by_season:current';
+        '&name=' + encodeURIComponent(name) + '&fields=mythic_plus_scores_by_season:current,gear';
       fetch(api).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
         var valEl = badge.querySelector('.io-val');
         var score = data && data.mythic_plus_scores_by_season && data.mythic_plus_scores_by_season[0] &&
           data.mythic_plus_scores_by_season[0].scores && data.mythic_plus_scores_by_season[0].scores.all;
         valEl.textContent = (typeof score === 'number') ? Math.round(score) : '–';
+        var ilvl = data && data.gear && data.gear.item_level_equipped;
+        if (ilvlEl && typeof ilvl === 'number' && ilvl > 0) {
+          ilvl = Math.round(ilvl);
+          ilvlEl.querySelector('.ilvl-val').textContent = ilvl;
+          ilvlEl.classList.remove('ilvl-good', 'ilvl-warn', 'ilvl-crit');
+          ilvlEl.classList.add('ilvl-' + (ilvl >= 285 ? 'good' : (ilvl >= 280 ? 'warn' : 'crit')));
+        }
       }).catch(function () {
         var valEl = badge.querySelector('.io-val');
         if (valEl) valEl.textContent = '–';
