@@ -307,28 +307,32 @@
   .members .m .ilvl.ilvl-warn { background: var(--warn); border-color: transparent; }
   .members .m .ilvl.ilvl-crit { background: var(--crit); border-color: transparent; }
   .members .m .ilvl.ilvl-crit small { color: #2a0a0a; opacity: .7; }
-  .keys-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+  .keys-list { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: start; }
   .keys-list .keys-loading { grid-column: 1 / -1; }
-  @media (max-width: 720px) { .keys-list { grid-template-columns: 1fr; } }
+  @media (max-width: 720px) { .keys-list { grid-template-columns: minmax(0, 1fr); } }
   .keys-loading { color: var(--faint); font: 600 .85rem/1 var(--mono); }
   .key-row { display: flex; align-items: center; gap: 12px; background: var(--surface);
-    border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px;
+    border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; min-width: 0;
     text-decoration: none; color: var(--text); transition: transform .15s, border-color .15s; }
   .key-row:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
   .key-row .kicon { flex: none; width: 38px; height: 38px; border-radius: 9px; border: 1px solid var(--line); object-fit: cover; }
-  .key-row .klvl { flex: none; font: 800 1rem/1 var(--mono); font-variant-numeric: tabular-nums;
-    padding: 6px 10px; border-radius: 9px; color: #fff;
+  .key-row .klvl { flex: none; width: 46px; box-sizing: border-box; text-align: center;
+    font: 800 1rem/1 var(--mono); font-variant-numeric: tabular-nums;
+    padding: 6px 4px; border-radius: 9px; color: #fff;
     text-shadow: -1px 0 #000, 1px 0 #000, 0 -1px #000, 0 1px #000; }
   .key-row .klvl.timed { background: linear-gradient(90deg, var(--good), #3fb6ff); }
   .key-row .klvl.depleted { background: var(--crit); }
-  .key-row .kstars { flex: none; color: var(--warn); font-size: .8rem; letter-spacing: 1px; }
+  .key-row .kstars { flex: none; width: 16px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 2px; color: var(--warn); font-size: .68rem; line-height: 1; }
+  .key-row .kstars.depleted { color: var(--crit); font-size: .85rem; }
   .key-row .kmid { flex: 1; min-width: 0; }
   .key-row .kdungeon { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .key-row .kwho { font-weight: 700; font-size: .85rem; }
-  .key-row .kmargin { flex: none; font: 700 .76rem/1 var(--mono); white-space: nowrap; }
+  .key-row .kright { flex: none; width: 132px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .key-row .kmargin { font: 800 .76rem/1.2 var(--mono); text-align: right; }
   .key-row .kmargin.timed { color: var(--good); }
   .key-row .kmargin.depleted { color: var(--crit); }
-  .key-row .kwhen { flex: none; color: var(--faint); font: 600 .76rem/1 var(--mono); white-space: nowrap; }
+  .key-row .kwhen { color: var(--faint); font: 600 .72rem/1 var(--mono); white-space: nowrap; }
   .members .m::after { content: "↗"; position: absolute; top: 8px; right: 10px; font-size: .8rem;
     color: var(--cc); opacity: 0; transform: translateY(2px); transition: opacity .2s, transform .2s; }
   .members .m:hover::after { opacity: .9; transform: none; }
@@ -931,7 +935,7 @@
       keysList.innerHTML = top.map(function (item) {
         var r = item.run;
         var timed = r.num_keystone_upgrades > 0;
-        var stars = timed ? '★'.repeat(Math.min(r.num_keystone_upgrades, 3)) : '✗';
+        var stars = timed ? '★<br>'.repeat(Math.min(r.num_keystone_upgrades, 3)).replace(/<br>$/, '') : '✗';
         var when = timeAgo(new Date(r.completed_at));
         var namesHtml = item.whos.map(function (name) {
           var cc = NAME_CLASS[name] || '#fff';
@@ -944,10 +948,9 @@
         return '<a class="key-row" href="' + r.url + '" target="_blank" rel="noopener noreferrer">' +
           '<img class="kicon" src="' + r.icon_url + '" alt="" loading="lazy">' +
           '<span class="klvl ' + (timed ? 'timed' : 'depleted') + '">+' + r.mythic_level + '</span>' +
-          '<span class="kstars">' + stars + '</span>' +
+          '<span class="kstars' + (timed ? '' : ' depleted') + '">' + stars + '</span>' +
           '<span class="kmid"><span class="kdungeon">' + r.dungeon + '</span><br><span class="kwho">' + namesHtml + '</span></span>' +
-          '<span class="kmargin ' + (timed ? 'timed' : 'depleted') + '">' + marginText + '</span>' +
-          '<span class="kwhen">' + when + '</span>' +
+          '<span class="kright"><span class="kmargin ' + (timed ? 'timed' : 'depleted') + '">' + marginText + '</span><span class="kwhen">' + when + '</span></span>' +
           '</a>';
       }).join('');
     });
