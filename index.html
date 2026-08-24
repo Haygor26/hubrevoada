@@ -307,7 +307,9 @@
   .members .m .ilvl.ilvl-warn { background: var(--warn); border-color: transparent; }
   .members .m .ilvl.ilvl-crit { background: var(--crit); border-color: transparent; }
   .members .m .ilvl.ilvl-crit small { color: #2a0a0a; opacity: .7; }
-  .keys-list { display: flex; flex-direction: column; gap: 10px; }
+  .keys-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+  .keys-list .keys-loading { grid-column: 1 / -1; }
+  @media (max-width: 720px) { .keys-list { grid-template-columns: 1fr; } }
   .keys-loading { color: var(--faint); font: 600 .85rem/1 var(--mono); }
   .key-row { display: flex; align-items: center; gap: 12px; background: var(--surface);
     border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px;
@@ -921,7 +923,7 @@
       });
       var unique = order.map(function (id) { return groups[id]; });
       unique.sort(function (a, b) { return new Date(b.run.completed_at) - new Date(a.run.completed_at); });
-      var top = unique.slice(0, 15);
+      var top = unique.slice(0, 30);
       if (top.length === 0) {
         keysList.innerHTML = '<p class="keys-loading">Nenhuma chave recente encontrada.</p>';
         return;
