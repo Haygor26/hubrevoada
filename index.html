@@ -897,7 +897,7 @@
       var name = badge.dataset.name, realm = badge.dataset.realm;
       var ilvlEl = document.querySelector('.ilvl[data-name="' + CSS.escape(name) + '"][data-realm="' + CSS.escape(realm) + '"]');
       var api = 'https://raider.io/api/v1/characters/profile?region=us&realm=' + encodeURIComponent(realm) +
-        '&name=' + encodeURIComponent(name) + '&fields=mythic_plus_scores_by_season:current,gear,mythic_plus_recent_runs';
+        '&name=' + encodeURIComponent(name) + '&fields=mythic_plus_scores_by_season:current,gear,mythic_plus_recent_runs:20';
       var p = fetch(api).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
         var valEl = badge.querySelector('.io-val');
         var score = data && data.mythic_plus_scores_by_season && data.mythic_plus_scores_by_season[0] &&
