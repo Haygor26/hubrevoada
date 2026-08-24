@@ -307,6 +307,23 @@
   .members .m .ilvl.ilvl-warn { background: var(--warn); border-color: transparent; }
   .members .m .ilvl.ilvl-crit { background: var(--crit); border-color: transparent; }
   .members .m .ilvl.ilvl-crit small { color: #2a0a0a; opacity: .7; }
+  .keys-list { display: flex; flex-direction: column; gap: 10px; }
+  .keys-loading { color: var(--faint); font: 600 .85rem/1 var(--mono); }
+  .key-row { display: flex; align-items: center; gap: 12px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px;
+    text-decoration: none; color: var(--text); transition: transform .15s, border-color .15s; }
+  .key-row:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+  .key-row .kicon { flex: none; width: 38px; height: 38px; border-radius: 9px; border: 1px solid var(--line); object-fit: cover; }
+  .key-row .klvl { flex: none; font: 800 1rem/1 var(--mono); font-variant-numeric: tabular-nums;
+    padding: 6px 10px; border-radius: 9px; color: #fff;
+    text-shadow: -1px 0 #000, 1px 0 #000, 0 -1px #000, 0 1px #000; }
+  .key-row .klvl.timed { background: linear-gradient(90deg, var(--good), #3fb6ff); }
+  .key-row .klvl.depleted { background: var(--crit); }
+  .key-row .kstars { flex: none; color: var(--warn); font-size: .8rem; letter-spacing: 1px; }
+  .key-row .kmid { flex: 1; min-width: 0; }
+  .key-row .kdungeon { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .key-row .kwho { color: var(--accent-soft); font-weight: 600; font-size: .85rem; }
+  .key-row .kwhen { flex: none; color: var(--faint); font: 600 .76rem/1 var(--mono); white-space: nowrap; }
   .members .m::after { content: "↗"; position: absolute; top: 8px; right: 10px; font-size: .8rem;
     color: var(--cc); opacity: 0; transform: translateY(2px); transition: opacity .2s, transform .2s; }
   .members .m:hover::after { opacity: .9; transform: none; }
@@ -494,6 +511,7 @@
   <a href="#kills" data-section="kills" title="Pulls"><span class="tip">Pulls</span></a>
   <a href="#cronograma" data-section="cronograma" title="Cronograma"><span class="tip">Cronograma</span></a>
   <a href="#roster" data-section="roster" title="Roster"><span class="tip">Roster</span></a>
+  <a href="#chaves" data-section="chaves" title="Chaves recentes"><span class="tip">Chaves</span></a>
   <a href="#presenca" data-section="presenca" title="Linha do tempo"><span class="tip">Presença</span></a>
 </nav>
 
@@ -521,6 +539,7 @@
     <a href="#kills" data-section="kills"><span class="ic">⚔️</span>Pulls</a>
     <a href="#cronograma" data-section="cronograma"><span class="ic">🗓️</span>Cronograma</a>
     <a href="#roster" data-section="roster"><span class="ic">👥</span>Roster</a>
+    <a href="#chaves" data-section="chaves"><span class="ic">🔑</span>Chaves</a>
     <a href="#presenca" data-section="presenca"><span class="ic">📊</span>Presença</a>
   </nav>
 
@@ -684,9 +703,18 @@
     </div>
   </section>
 
-  <section id="presenca" class="reveal">
+  <section id="chaves" class="reveal">
     <div class="shead">
       <span class="n">06</span>
+      <h2>Chaves recentes</h2>
+      <span class="hint">últimas M+ do core · dados via Raider.IO</span>
+    </div>
+    <div class="keys-list" id="keysList"><p class="keys-loading">Carregando chaves recentes…</p></div>
+  </section>
+
+  <section id="presenca" class="reveal">
+    <div class="shead">
+      <span class="n">07</span>
       <h2>Linha do tempo — presença</h2>
       <span class="hint">Season 2 · 18/ago a 07/out · role a faixa →</span>
     </div>
@@ -841,14 +869,16 @@
     });
   });
 
-  // busca pontuação Mythic+ e ilvl (raider.io) de cada personagem e preenche os badges
+  // busca pontuação Mythic+, ilvl e chaves recentes (raider.io) de cada personagem
   (function () {
+    var allRuns = [];
+    var fetches = [];
     document.querySelectorAll('.io-badge').forEach(function (badge) {
       var name = badge.dataset.name, realm = badge.dataset.realm;
       var ilvlEl = document.querySelector('.ilvl[data-name="' + CSS.escape(name) + '"][data-realm="' + CSS.escape(realm) + '"]');
       var api = 'https://raider.io/api/v1/characters/profile?region=us&realm=' + encodeURIComponent(realm) +
-        '&name=' + encodeURIComponent(name) + '&fields=mythic_plus_scores_by_season:current,gear';
-      fetch(api).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
+        '&name=' + encodeURIComponent(name) + '&fields=mythic_plus_scores_by_season:current,gear,mythic_plus_recent_runs';
+      var p = fetch(api).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
         var valEl = badge.querySelector('.io-val');
         var score = data && data.mythic_plus_scores_by_season && data.mythic_plus_scores_by_season[0] &&
           data.mythic_plus_scores_by_season[0].scores && data.mythic_plus_scores_by_season[0].scores.all;
@@ -860,11 +890,58 @@
           ilvlEl.classList.remove('ilvl-good', 'ilvl-warn', 'ilvl-crit');
           ilvlEl.classList.add('ilvl-' + (ilvl >= 285 ? 'good' : (ilvl >= 280 ? 'warn' : 'crit')));
         }
+        if (data && Array.isArray(data.mythic_plus_recent_runs)) {
+          data.mythic_plus_recent_runs.forEach(function (run) {
+            allRuns.push({ who: name, run: run });
+          });
+        }
       }).catch(function () {
         var valEl = badge.querySelector('.io-val');
         if (valEl) valEl.textContent = '–';
       });
+      fetches.push(p);
     });
+
+    Promise.allSettled(fetches).then(function () {
+      var keysList = document.getElementById('keysList');
+      if (!keysList) return;
+      var seen = {};
+      var unique = [];
+      allRuns.sort(function (a, b) { return new Date(b.run.completed_at) - new Date(a.run.completed_at); });
+      allRuns.forEach(function (item) {
+        if (seen[item.run.keystone_run_id]) return;
+        seen[item.run.keystone_run_id] = true;
+        unique.push(item);
+      });
+      var top = unique.slice(0, 15);
+      if (top.length === 0) {
+        keysList.innerHTML = '<p class="keys-loading">Nenhuma chave recente encontrada.</p>';
+        return;
+      }
+      keysList.innerHTML = top.map(function (item) {
+        var r = item.run;
+        var timed = r.num_keystone_upgrades > 0;
+        var stars = timed ? '★'.repeat(Math.min(r.num_keystone_upgrades, 3)) : '✗';
+        var when = timeAgo(new Date(r.completed_at));
+        return '<a class="key-row" href="' + r.url + '" target="_blank" rel="noopener noreferrer">' +
+          '<img class="kicon" src="' + r.icon_url + '" alt="" loading="lazy">' +
+          '<span class="klvl ' + (timed ? 'timed' : 'depleted') + '">+' + r.mythic_level + '</span>' +
+          '<span class="kstars">' + stars + '</span>' +
+          '<span class="kmid"><span class="kdungeon">' + r.dungeon + '</span><br><span class="kwho">' + item.who + '</span></span>' +
+          '<span class="kwhen">' + when + '</span>' +
+          '</a>';
+      }).join('');
+    });
+
+    function timeAgo(date) {
+      var diffMs = Date.now() - date.getTime();
+      var min = Math.floor(diffMs / 60000);
+      if (min < 60) return 'há ' + Math.max(min, 1) + 'min';
+      var h = Math.floor(min / 60);
+      if (h < 24) return 'há ' + h + 'h';
+      var d = Math.floor(h / 24);
+      return 'há ' + d + 'd';
+    }
   })();
 
   // pódio: preenche os portraits (GM + laterais)
