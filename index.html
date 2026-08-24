@@ -957,11 +957,18 @@
           '<span class="klvl ' + (timed ? 'timed' : 'depleted') + '">+' + r.mythic_level + '</span>' +
           '<span class="kstars' + (timed ? '' : ' depleted') + '">' + stars + '</span>' +
           '<span class="kdungeon">' + r.dungeon + '</span>' +
-          '<span class="kright"><span class="kmargin ' + (timed ? 'timed' : 'depleted') + '">' + marginText + '</span><span class="kwhen">' + when + '</span></span>' +
+          '<span class="kright"><span class="kmargin ' + (timed ? 'timed' : 'depleted') + '">' + marginText + '</span><span class="kwhen" data-ts="' + r.completed_at + '">' + when + '</span></span>' +
           '</span>' +
           '<span class="kwho">' + namesHtml + '</span>' +
           '</a>';
       }).join('');
+
+      if (window.keysAgoInterval) clearInterval(window.keysAgoInterval);
+      window.keysAgoInterval = setInterval(function () {
+        keysList.querySelectorAll('.kwhen[data-ts]').forEach(function (el) {
+          el.textContent = timeAgo(new Date(el.dataset.ts));
+        });
+      }, 60000);
     });
 
     function timeAgo(date) {
