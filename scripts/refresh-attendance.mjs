@@ -117,15 +117,20 @@ function nightKeyFromTimestamp(ms) {
   return `${Number(parts.month)}/${Number(parts.day)}`;
 }
 
-// tally de pulls/kill por encounterID+dificuldade a partir da lista de fights de 1 report
+// tally de pulls/kill por encounterID+dificuldade a partir da lista de fights de 1 report.
+// `pulls` = total de pulls no report; `pullsToKill` = quantos pulls foram necessários até a
+// primeira kill (inclusive) — depois que o boss morre, os pulls de farm não contam mais.
 function tallyFights(fights) {
   const tally = {};
   for (const f of fights) {
     if (!f.encounterID || !f.difficulty) continue;
     const key = f.encounterID + ':' + f.difficulty;
-    tally[key] = tally[key] || { pulls: 0, killed: false };
-    tally[key].pulls++;
-    if (f.kill) tally[key].killed = true;
+    const t = tally[key] = tally[key] || { pulls: 0, killed: false, pullsToKill: 0 };
+    t.pulls++;
+    if (!t.killed) {
+      t.pullsToKill = t.pulls;
+      if (f.kill) t.killed = true;
+    }
   }
   return tally;
 }
@@ -136,25 +141,34 @@ function mergeSameNightTallies(tallies) {
   const merged = {};
   for (const t of tallies) {
     for (const key of Object.keys(t)) {
-      merged[key] = merged[key] || { pulls: 0, killed: false };
-      merged[key].pulls = Math.max(merged[key].pulls, t[key].pulls);
-      merged[key].killed = merged[key].killed || t[key].killed;
+      const m = merged[key] = merged[key] || { pulls: 0, killed: false, pullsToKill: 0 };
+      m.pulls = Math.max(m.pulls, t[key].pulls);
+      // entre loggers da mesma noite, vale o que viu mais pulls até a kill (sessão inteira)
+      if (t[key].killed) {
+        m.pullsToKill = m.killed ? Math.max(m.pullsToKill, t[key].pullsToKill) : t[key].pullsToKill;
+        m.killed = true;
+      } else if (!m.killed) {
+        m.pullsToKill = Math.max(m.pullsToKill, t[key].pullsToKill);
+      }
     }
   }
   return merged;
 }
 
-// soma os tallies (já deduplicados por noite) de noites DIFERENTES — aí sim acumula
-function sumTallies(tallies) {
-  const summed = {};
-  for (const t of tallies) {
-    for (const key of Object.keys(t)) {
-      summed[key] = summed[key] || { pulls: 0, killed: false };
-      summed[key].pulls += t[key].pulls;
-      summed[key].killed = summed[key].killed || t[key].killed;
+// acumula os tallies (já deduplicados por noite) em ordem CRONOLÓGICA: soma os pulls das noites
+// anteriores e para de contar na noite em que o boss morreu — o número exibido é "quantos pulls
+// foram necessários pra matar", não o total de pulls da season (farm depois da kill não conta).
+function accumulateTallies(nights) {
+  const acc = {};
+  for (const { tally } of nights) {
+    for (const key of Object.keys(tally)) {
+      const a = acc[key] = acc[key] || { pulls: 0, killed: false };
+      if (a.killed) continue;
+      a.pulls += tally[key].pullsToKill;
+      if (tally[key].killed) a.killed = true;
     }
   }
-  return summed;
+  return acc;
 }
 
 // monta o array [[nome, pulls, killed], ...] pra uma dificuldade, a partir do tally agregado
@@ -228,6 +242,7 @@ async function main() {
 
   const touchedKeys = new Set();
   const tallyByNight = {}; // nightKey -> [tally1, tally2, ...] (um tally por report daquela noite)
+  const nightStart = {};   // nightKey -> menor startTime, pra ordenar as noites cronologicamente
 
   for (const code of codesToProcess) {
     console.log(`Lendo report ${code}...`);
@@ -240,6 +255,7 @@ async function main() {
     }
     const key = nightKeyFromTimestamp(rep.startTime);
     (tallyByNight[key] = tallyByNight[key] || []).push(tallyFights(rep.fights));
+    nightStart[key] = Math.min(nightStart[key] ?? Infinity, rep.startTime);
     if (!nightKeys.includes(key)) {
       console.log(`  AVISO: noite ${key} não está em NIGHTS (attendance pulada, mas kills contam).`);
     } else {
@@ -276,13 +292,19 @@ async function main() {
     const existing = JSON.parse(m[1]);
     return freshArr.map(([name, pulls, killed], i) => {
       const old = existing[i] || [name, 0, false];
-      return [name, Math.max(pulls, old[1]), killed || old[2]];
+      // boss já morto no arquivo: o número de pulls até a kill é definitivo, não mexe mais
+      if (old[2]) return [name, old[1], true];
+      return [name, Math.max(pulls, old[1]), killed];
     });
   }
 
-  // dedup: várias reports da mesma noite (loggers em paralelo) viram 1 tally (máximo);
-  // depois soma entre noites diferentes pra acumular pulls de verdade ao longo da season
-  const fightsTally = sumTallies(Object.values(tallyByNight).map(mergeSameNightTallies));
+  // dedup: vários reports da mesma noite (loggers em paralelo) viram 1 tally (máximo);
+  // depois acumula em ordem cronológica, parando na noite da kill (pulls até matar)
+  const fightsTally = accumulateTallies(
+    Object.keys(tallyByNight)
+      .sort((a, b) => nightStart[a] - nightStart[b])
+      .map(k => ({ tally: mergeSameNightTallies(tallyByNight[k]) }))
+  );
 
   const vaNormal = mergeKillsArray('KILLS_N', buildKillsArray(VA_BOSSES, DIFF.normal, fightsTally));
   const vaHeroic = mergeKillsArray('KILLS_H', buildKillsArray(VA_BOSSES, DIFF.heroic, fightsTally));
