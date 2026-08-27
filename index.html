@@ -614,8 +614,8 @@
         <div class="tier">Season nova · Patch 12.1 · 9 chefes</div>
         <div class="bars">
           <div class="bar n">
-            <div class="top"><span class="lbl">Normal</span><b>7 / 9</b></div>
-            <div class="track"><div class="fill n" data-w="77.8"></div></div>
+            <div class="top"><span class="lbl">Normal</span><b>9 / 9</b></div>
+            <div class="track"><div class="fill n" data-w="100"></div></div>
           </div>
           <div class="bar h">
             <div class="top"><span class="lbl">Heroico</span><b>0 / 9</b></div>
@@ -624,7 +624,7 @@
         </div>
       </div>
       <div class="stat-col">
-        <div class="card stat"><span class="k">7/9</span><span class="l">Normal · em progressão</span></div>
+        <div class="card stat"><span class="k">9/9</span><span class="l">Normal · em progressão</span></div>
         <div class="card stat"><span class="k accent">0/9</span><span class="l">Heroico · aguardando reset</span></div>
         <div class="card stat"><span class="k">27</span><span class="l">Raiders no core</span></div>
       </div>
@@ -635,7 +635,7 @@
     <div class="shead">
       <span class="n">03</span>
       <h2>Pulls</h2>
-      <span class="hint">7/9 chefes abatidos no Normal</span>
+      <span class="hint">9/9 chefes abatidos no Normal</span>
     </div>
     <div class="raid-group">
       <div class="raid-group-head">The Tidebound Grotto</div>
@@ -1021,7 +1021,7 @@
     ["Nymrissa Wavecaller",1,true]
   ];
   var KILLS_H_TG = [
-    ["Nymrissa Wavecaller",2,false]
+    ["Nymrissa Wavecaller",2,true]
   ];
   var KILLS_M_TG = [
     ["Nymrissa Wavecaller",0,false]
@@ -1033,11 +1033,11 @@
     ["Vashnik the Malignant",3,true],
     ["Sszorak",5,true],
     ["The Twin Fangs",3,true],
-    ["The Coiled Altar",0,false],
-    ["Ula'tek",0,false]
+    ["The Coiled Altar",4,true],
+    ["Ula'tek",3,true]
   ];
   var KILLS_H = [
-    ["Nek'zali the Soulcoiler",0,false],
+    ["Nek'zali the Soulcoiler",1,true],
     ["Entombed Sentinels",0,false],
     ["The Lost Explorers",0,false],
     ["Vashnik the Malignant",0,false],
@@ -1093,9 +1093,9 @@
       [9, 29, 2026], [9, 30, 2026], [10, 6, 2026], [10, 7, 2026]
     ];
     // índice da última noite já realizada (-1 = nenhuma ainda). A partir daí as colunas ficam cinza.
-    var LAST_LOGGED = 2;
+    var LAST_LOGGED = 3;
     // presença real por jogador → { "M/D": 1|0 } — preencher conforme os logs saírem
-    var ATT = {"Bahryzta":{"8/18":1,"8/19":1,"8/25":1},"Ormot":{"8/18":1,"8/19":1,"8/25":1},"Athelìa":{"8/18":1,"8/19":1,"8/25":1},"Buticodeoro":{"8/18":1,"8/19":1,"8/25":1},"Chiso":{"8/18":1,"8/19":1,"8/25":1},"Salkiing":{"8/18":1,"8/19":1,"8/25":1},"Tessagrayh":{"8/18":1,"8/19":1,"8/25":1},"Aloppes":{"8/18":1,"8/19":1,"8/25":1},"Carina":{"8/18":1,"8/19":1,"8/25":1},"Dïazepam":{"8/18":1,"8/19":1,"8/25":1},"Dracullaura":{"8/18":1,"8/19":1,"8/25":1},"Euridice":{"8/18":1,"8/19":1,"8/25":1},"Feanori":{"8/18":1,"8/19":1,"8/25":1},"Grömdak":{"8/18":1,"8/19":1,"8/25":1},"Hakarvyr":{"8/18":1,"8/19":1,"8/25":1},"Hyzor":{"8/18":1,"8/19":1,"8/25":1},"Inflexível":{"8/18":1,"8/19":1,"8/25":1},"Jazzkiler":{"8/18":1,"8/19":1,"8/25":1},"Kissuko":{"8/18":1,"8/19":1,"8/25":1},"Kolhberg":{"8/18":1,"8/19":1},"Pervertido":{"8/18":1,"8/19":1,"8/25":1},"Riswen":{"8/18":1,"8/19":1,"8/25":1},"Saponáceo":{"8/18":1,"8/19":1,"8/25":1},"Seind":{"8/18":1,"8/19":1,"8/25":1},"Sicarious":{"8/18":1,"8/19":1,"8/25":1},"Tiagolargado":{"8/18":1,"8/19":1,"8/25":1},"Valunii":{"8/18":1,"8/19":1,"8/25":1}};
+    var ATT = {"Bahryzta":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Ormot":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Athelìa":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Buticodeoro":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Chiso":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Salkiing":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Tessagrayh":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Aloppes":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Carina":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Dïazepam":{"8/18":1,"8/19":1,"8/25":1},"Dracullaura":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Euridice":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Feanori":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Grömdak":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Hakarvyr":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Hyzor":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Inflexível":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Jazzkiler":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Kissuko":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Kolhberg":{"8/18":1,"8/19":1,"8/26":1},"Pervertido":{"8/18":1,"8/19":1,"8/25":1},"Riswen":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Saponáceo":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Seind":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Sicarious":{"8/18":1,"8/19":1,"8/25":1},"Tiagolargado":{"8/18":1,"8/19":1,"8/25":1,"8/26":1},"Valunii":{"8/18":1,"8/19":1,"8/25":1,"8/26":1}};
 
     var ALL = ROSTER.tank.concat(ROSTER.heal, ROSTER.dps);
     var ROLE_ICON = { tank: '🛡️', heal: '💚', dps: '⚔️' };
