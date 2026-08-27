@@ -186,13 +186,19 @@ function replaceArray(html, varName, arr) {
   return html.replace(re, `var ${varName} = ${literal};`);
 }
 
-function updateProgressCard(html, killedVA, killedTG) {
+function updateProgressCard(html, killedVA, killedTG, killedVA_H, killedTG_H) {
   const totalNormal = killedVA + killedTG;
+  const totalHeroic = killedVA_H + killedTG_H;
   const totalBosses = VA_BOSSES.length + TG_BOSSES.length;
-  const pct = (totalNormal / totalBosses * 100).toFixed(1).replace(/\.0$/, '');
+  const pctN = (totalNormal / totalBosses * 100).toFixed(1).replace(/\.0$/, '');
+  const pctH = (totalHeroic / totalBosses * 100).toFixed(1).replace(/\.0$/, '');
   html = html.replace(/<span class="lbl">Normal<\/span><b>\d+ \/ 9<\/b>/, `<span class="lbl">Normal</span><b>${totalNormal} / 9</b>`);
-  html = html.replace(/<div class="fill n" data-w="[\d.]+"><\/div>/, `<div class="fill n" data-w="${pct}"></div>`);
+  html = html.replace(/<div class="fill n" data-w="[\d.]+"><\/div>/, `<div class="fill n" data-w="${pctN}"></div>`);
+  html = html.replace(/<span class="lbl">Heroico<\/span><b>\d+ \/ 9<\/b>/, `<span class="lbl">Heroico</span><b>${totalHeroic} / 9</b>`);
+  html = html.replace(/<div class="fill h" data-w="[\d.]+"><\/div>/, `<div class="fill h" data-w="${pctH}"></div>`);
   html = html.replace(/<span class="k">\d+\/9<\/span><span class="l">Normal · [^<]*<\/span>/, `<span class="k">${totalNormal}/9</span><span class="l">Normal · em progressão</span>`);
+  const heroLabel = totalHeroic > 0 ? 'em progressão' : 'aguardando reset';
+  html = html.replace(/<span class="k accent">\d+\/9<\/span><span class="l">Heroico · [^<]*<\/span>/, `<span class="k accent">${totalHeroic}/9</span><span class="l">Heroico · ${heroLabel}</span>`);
   html = html.replace(/<span class="hint">\d+\/9 chefes abatidos no Normal<\/span>/, `<span class="hint">${totalNormal}/9 chefes abatidos no Normal</span>`);
   return html;
 }
@@ -320,10 +326,12 @@ async function main() {
 
   const killedVA = vaNormal.filter(([, , k]) => k).length;
   const killedTG = tgNormal.filter(([, , k]) => k).length;
-  html = updateProgressCard(html, killedVA, killedTG);
+  const killedVA_H = vaHeroic.filter(([, , k]) => k).length;
+  const killedTG_H = tgHeroic.filter(([, , k]) => k).length;
+  html = updateProgressCard(html, killedVA, killedTG, killedVA_H, killedTG_H);
 
   fs.writeFileSync(FILE, html, 'utf8');
-  console.log(`Kills: Venomous Abyss ${killedVA}/${VA_BOSSES.length} Normal, Tidebound Grotto ${killedTG}/${TG_BOSSES.length} Normal.`);
+  console.log(`Kills: Venomous Abyss ${killedVA}/${VA_BOSSES.length} Normal + ${killedVA_H}/${VA_BOSSES.length} Heroico, Tidebound Grotto ${killedTG}/${TG_BOSSES.length} Normal + ${killedTG_H}/${TG_BOSSES.length} Heroico.`);
   console.log('Pronto.');
 }
 
