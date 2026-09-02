@@ -17,7 +17,7 @@ function loadCredentials() {
 // WCL guild id (NÃO é o guild id do Raider.io, é outro número) — descoberto via
 // guildData.guild(name, serverSlug, serverRegion) ou reportData.report(code).guild.id
 const GUILD_ID = 693273;
-const LOG_OWNERS = ['mattchi', 'victoriarf']; // owners dos logs de core, case-insensitive
+const LOG_OWNERS = ['mattchi', 'victoriarf', 'lipitakke']; // owners dos logs de core, case-insensitive
 const TIMEZONE = 'America/Sao_Paulo';
 
 // bosses rastreados no Pulls, na ordem exibida no site — precisa bater com os KILLS_* do index.html
