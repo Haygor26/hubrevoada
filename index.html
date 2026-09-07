@@ -333,6 +333,31 @@
   .roster-rank-left { right: calc(100% + 28px); }
   .roster-rank-right { left: calc(100% + 28px); }
   @media (max-width: 1560px) { .roster-rank { display: none; } }
+  .roster-rank-mobile { display: none; margin: 0 0 28px; }
+  @media (max-width: 1560px) { .roster-rank-mobile { display: block; } }
+  .roster-rank-mobile .rk-collapse { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+  .roster-rank-mobile summary { cursor: pointer; padding: 14px 18px; font-weight: 750; font-size: 1rem;
+    list-style: none; display: flex; align-items: center; gap: 8px; user-select: none; }
+  .roster-rank-mobile summary::-webkit-details-marker { display: none; }
+  .roster-rank-mobile summary::after { content: '▾'; margin-left: auto; color: var(--faint); transition: transform .2s; }
+  .roster-rank-mobile details[open] summary::after { transform: rotate(180deg); }
+  .roster-rank-mobile ol { list-style: none; margin: 0; padding: 0 14px 14px; display: flex; flex-direction: column;
+    gap: 6px; max-height: 340px; overflow-y: auto; }
+  .roster-rank-mobile li.rk-row {
+    --cc: var(--accent);
+    display: flex; align-items: center; gap: 10px; padding: 7px 12px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 12%, transparent), transparent 60%), var(--surface-2);
+    border: 1px solid var(--line); border-radius: 9px; position: relative; overflow: hidden;
+  }
+  .roster-rank-mobile li.rk-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--cc); }
+  .roster-rank-mobile .rk-pos { flex: none; font: 800 .75rem/1 var(--mono); color: var(--faint); width: 1.4em; }
+  .roster-rank-mobile .rk-name { flex: 1; min-width: 0; font-weight: 650; font-size: .86rem; color: var(--cc);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .roster-rank-mobile .rk-val { flex: none; font: 800 .8rem/1 var(--mono); font-variant-numeric: tabular-nums;
+    color: #fff; text-shadow: -1px 0 #000, 1px 0 #000, 0 -1px #000, 0 1px #000, -1px -1px #000, 1px -1px #000, -1px 1px #000, 1px 1px #000;
+    padding: 4px 9px; border-radius: 7px; border: 1px solid transparent; }
+  .roster-rank-mobile .rk-val.rk-io { background: linear-gradient(90deg, #ff7a1a, #ffb03a); }
+  .roster-rank-mobile .rk-val.rk-ilvl { background: linear-gradient(90deg, var(--good), #3fb6ff); }
   .keys-list { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: start; }
   .keys-list .keys-loading { grid-column: 1 / -1; }
   @media (max-width: 720px) { .keys-list { grid-template-columns: minmax(0, 1fr); } }
@@ -732,6 +757,17 @@
       <ol id="topIlvlList"></ol>
     </aside>
 
+    <div class="roster-rank-mobile">
+      <details class="rk-collapse" id="topIoPanelMobile" hidden>
+        <summary>🏆 Top io</summary>
+        <ol id="topIoListMobile"></ol>
+      </details>
+      <details class="rk-collapse" id="topIlvlPanelMobile" hidden>
+        <summary>⚔️ Top ilvl</summary>
+        <ol id="topIlvlListMobile"></ol>
+      </details>
+    </div>
+
     <div class="role-block">
       <div class="role-head"><h3>🛡️ Tanks</h3><span class="count" data-count="tank"></span><span class="rule"></span></div>
       <div class="members" data-role="tank"></div>
@@ -975,6 +1011,8 @@
     Promise.allSettled(fetches).then(function () {
       renderRosterRank('topIoPanel', 'topIoList', rankData, 'score');
       renderRosterRank('topIlvlPanel', 'topIlvlList', rankData, 'ilvl');
+      renderRosterRank('topIoPanelMobile', 'topIoListMobile', rankData, 'score');
+      renderRosterRank('topIlvlPanelMobile', 'topIlvlListMobile', rankData, 'ilvl');
       var keysList = document.getElementById('keysList');
       if (!keysList) return;
       var groups = {};
