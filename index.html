@@ -311,23 +311,25 @@
   .members .m .ilvl.ilvl-crit { background: var(--crit); border-color: transparent; }
   .members .m .ilvl.ilvl-crit small { color: #2a0a0a; opacity: .7; }
   #roster { position: relative; }
-  .roster-rank { position: absolute; top: 60px; bottom: 0; width: 240px; overflow-y: auto; padding-right: 4px; }
-  .roster-rank::-webkit-scrollbar { width: 6px; }
-  .roster-rank::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
-  .roster-rank .rk-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 750; font-size: .98rem;
-    position: sticky; top: 0; background: var(--bg); padding-bottom: 4px; z-index: 1; }
-  .roster-rank ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .roster-rank { position: absolute; top: 60px; bottom: 0; width: 240px; }
+  .roster-rank .rk-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 750; font-size: .92rem; }
+  .roster-rank ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; height: 100%; }
   .roster-rank li.rk-row {
     --cc: var(--accent);
-    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    flex: 1;
+    display: flex; align-items: center; gap: 8px; padding: 3px 10px; min-height: 0;
     background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 12%, transparent), transparent 60%), var(--surface);
-    border: 1px solid var(--line); border-radius: 10px; position: relative; overflow: hidden;
+    border: 1px solid var(--line); border-radius: 8px; position: relative; overflow: hidden;
   }
   .roster-rank li.rk-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--cc); }
-  .roster-rank .rk-pos { flex: none; font: 800 .8rem/1 var(--mono); color: var(--faint); width: 1.4em; }
-  .roster-rank .rk-name { flex: 1; min-width: 0; font-weight: 650; font-size: .88rem; color: var(--cc);
+  .roster-rank .rk-pos { flex: none; font: 800 .72rem/1 var(--mono); color: var(--faint); width: 1.3em; }
+  .roster-rank .rk-name { flex: 1; min-width: 0; font-weight: 650; font-size: .8rem; color: var(--cc);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .roster-rank .rk-val { flex: none; font: 800 .85rem/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--text); }
+  .roster-rank .rk-val { flex: none; font: 800 .78rem/1 var(--mono); font-variant-numeric: tabular-nums;
+    color: #fff; text-shadow: -1px 0 #000, 1px 0 #000, 0 -1px #000, 0 1px #000, -1px -1px #000, 1px -1px #000, -1px 1px #000, 1px 1px #000;
+    padding: 4px 8px; border-radius: 7px; border: 1px solid transparent; }
+  .roster-rank .rk-val.rk-io { background: linear-gradient(90deg, #ff7a1a, #ffb03a); }
+  .roster-rank .rk-val.rk-ilvl { background: linear-gradient(90deg, var(--good), #3fb6ff); }
   .roster-rank-left { right: calc(100% + 28px); }
   .roster-rank-right { left: calc(100% + 28px); }
   @media (max-width: 1560px) { .roster-rank { display: none; } }
@@ -922,12 +924,13 @@
     var top = rankData.filter(function (d) { return typeof d[field] === 'number'; })
       .sort(function (a, b) { return b[field] - a[field]; });
     if (top.length === 0) { panel.hidden = true; return; }
+    var valClass = field === 'score' ? 'rk-io' : 'rk-ilvl';
     list.innerHTML = top.map(function (d, i) {
       var cc = NAME_CLASS[d.name] || '#fff';
       return '<li class="rk-row" style="--cc:' + cc + '">' +
         '<span class="rk-pos">#' + (i + 1) + '</span>' +
         '<span class="rk-name">' + d.name + '</span>' +
-        '<span class="rk-val">' + d[field] + '</span>' +
+        '<span class="rk-val ' + valClass + '">' + d[field] + '</span>' +
         '</li>';
     }).join('');
     panel.hidden = false;
