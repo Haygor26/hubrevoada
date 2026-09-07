@@ -310,6 +310,27 @@
   .members .m .ilvl.ilvl-warn { background: var(--warn); border-color: transparent; }
   .members .m .ilvl.ilvl-crit { background: var(--crit); border-color: transparent; }
   .members .m .ilvl.ilvl-crit small { color: #2a0a0a; opacity: .7; }
+  #roster { position: relative; }
+  .roster-rank { position: absolute; top: 60px; bottom: 0; width: 240px; overflow-y: auto; padding-right: 4px; }
+  .roster-rank::-webkit-scrollbar { width: 6px; }
+  .roster-rank::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+  .roster-rank .rk-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 750; font-size: .98rem;
+    position: sticky; top: 0; background: var(--bg); padding-bottom: 4px; z-index: 1; }
+  .roster-rank ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .roster-rank li.rk-row {
+    --cc: var(--accent);
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 12%, transparent), transparent 60%), var(--surface);
+    border: 1px solid var(--line); border-radius: 10px; position: relative; overflow: hidden;
+  }
+  .roster-rank li.rk-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--cc); }
+  .roster-rank .rk-pos { flex: none; font: 800 .8rem/1 var(--mono); color: var(--faint); width: 1.4em; }
+  .roster-rank .rk-name { flex: 1; min-width: 0; font-weight: 650; font-size: .88rem; color: var(--cc);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .roster-rank .rk-val { flex: none; font: 800 .85rem/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--text); }
+  .roster-rank-left { right: calc(100% + 28px); }
+  .roster-rank-right { left: calc(100% + 28px); }
+  @media (max-width: 1560px) { .roster-rank { display: none; } }
   .keys-list { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: start; }
   .keys-list .keys-loading { grid-column: 1 / -1; }
   @media (max-width: 720px) { .keys-list { grid-template-columns: minmax(0, 1fr); } }
@@ -700,6 +721,15 @@
       <span class="hint">core da Season 2 · dados via Blizzard API</span>
     </div>
 
+    <aside class="roster-rank roster-rank-left" id="topIoPanel" hidden>
+      <div class="rk-head">🏆 Top io</div>
+      <ol id="topIoList"></ol>
+    </aside>
+    <aside class="roster-rank roster-rank-right" id="topIlvlPanel" hidden>
+      <div class="rk-head">⚔️ Top ilvl</div>
+      <ol id="topIlvlList"></ol>
+    </aside>
+
     <div class="role-block">
       <div class="role-head"><h3>🛡️ Tanks</h3><span class="count" data-count="tank"></span><span class="rule"></span></div>
       <div class="members" data-role="tank"></div>
@@ -885,10 +915,29 @@
     });
   });
 
+  function renderRosterRank(panelId, listId, rankData, field) {
+    var panel = document.getElementById(panelId);
+    var list = document.getElementById(listId);
+    if (!panel || !list) return;
+    var top = rankData.filter(function (d) { return typeof d[field] === 'number'; })
+      .sort(function (a, b) { return b[field] - a[field]; });
+    if (top.length === 0) { panel.hidden = true; return; }
+    list.innerHTML = top.map(function (d, i) {
+      var cc = NAME_CLASS[d.name] || '#fff';
+      return '<li class="rk-row" style="--cc:' + cc + '">' +
+        '<span class="rk-pos">#' + (i + 1) + '</span>' +
+        '<span class="rk-name">' + d.name + '</span>' +
+        '<span class="rk-val">' + d[field] + '</span>' +
+        '</li>';
+    }).join('');
+    panel.hidden = false;
+  }
+
   // busca pontuação Mythic+, ilvl e chaves recentes (raider.io) de cada personagem
   function refreshRaiderIoData() {
     var allRuns = [];
     var fetches = [];
+    var rankData = [];
     document.querySelectorAll('.io-badge').forEach(function (badge) {
       var name = badge.dataset.name, realm = badge.dataset.realm;
       var ilvlEl = document.querySelector('.ilvl[data-name="' + CSS.escape(name) + '"][data-realm="' + CSS.escape(realm) + '"]');
@@ -898,14 +947,16 @@
         var valEl = badge.querySelector('.io-val');
         var score = data && data.mythic_plus_scores_by_season && data.mythic_plus_scores_by_season[0] &&
           data.mythic_plus_scores_by_season[0].scores && data.mythic_plus_scores_by_season[0].scores.all;
-        valEl.textContent = (typeof score === 'number') ? Math.round(score) : '–';
+        score = (typeof score === 'number') ? Math.round(score) : null;
+        valEl.textContent = (score !== null) ? score : '–';
         var ilvl = data && data.gear && data.gear.item_level_equipped;
-        if (ilvlEl && typeof ilvl === 'number' && ilvl > 0) {
-          ilvl = Math.round(ilvl);
+        ilvl = (typeof ilvl === 'number' && ilvl > 0) ? Math.round(ilvl) : null;
+        if (ilvlEl && ilvl !== null) {
           ilvlEl.querySelector('.ilvl-val').textContent = ilvl;
           ilvlEl.classList.remove('ilvl-good', 'ilvl-warn', 'ilvl-crit');
           ilvlEl.classList.add('ilvl-' + (ilvl >= 285 ? 'good' : (ilvl >= 280 ? 'warn' : 'crit')));
         }
+        rankData.push({ name: name, score: score, ilvl: ilvl });
         if (data && Array.isArray(data.mythic_plus_recent_runs)) {
           data.mythic_plus_recent_runs.forEach(function (run) {
             allRuns.push({ who: name, run: run });
@@ -919,6 +970,8 @@
     });
 
     Promise.allSettled(fetches).then(function () {
+      renderRosterRank('topIoPanel', 'topIoList', rankData, 'score');
+      renderRosterRank('topIlvlPanel', 'topIlvlList', rankData, 'ilvl');
       var keysList = document.getElementById('keysList');
       if (!keysList) return;
       var groups = {};
