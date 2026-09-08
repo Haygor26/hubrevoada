@@ -957,8 +957,14 @@
     var panel = document.getElementById(panelId);
     var list = document.getElementById(listId);
     if (!panel || !list) return;
+    var otherField = field === 'score' ? 'ilvl' : 'score';
     var top = rankData.filter(function (d) { return typeof d[field] === 'number'; })
-      .sort(function (a, b) { return b[field] - a[field]; });
+      .sort(function (a, b) {
+        if (b[field] !== a[field]) return b[field] - a[field];
+        var bo = b[otherField] || 0, ao = a[otherField] || 0;
+        if (bo !== ao) return bo - ao;
+        return a.name.localeCompare(b.name);
+      });
     if (top.length === 0) { panel.hidden = true; return; }
     var valClass = field === 'score' ? 'rk-io' : 'rk-ilvl';
     list.innerHTML = top.map(function (d, i) {
