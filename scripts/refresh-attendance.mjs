@@ -290,7 +290,10 @@ async function main() {
 
   // --- kills/pulls ---
   // modo auto: guildID search já cobre a temporada inteira -> recalcula os arrays do zero (sem risco de duplicar pulls)
-  // modo explícito (códigos passados na mão): só temos ESSES reports, então faz merge (máximo) com o que já tava salvo
+  // modo explícito (códigos passados na mão): cada chamada cobre uma noite NOVA que ainda não
+  // está no arquivo, então soma os pulls dessa noite aos que já tavam salvos (sem duplicar,
+  // já que esses códigos nunca foram processados antes) — mesma lógica cronológica do modo auto,
+  // só que noite-a-noite em vez de tudo de uma vez
   function mergeKillsArray(existingVarName, freshArr) {
     if (isAutoMode) return freshArr;
     const m = html.match(new RegExp(`var ${existingVarName} = (\\[[\\s\\S]*?\\]);`));
@@ -300,7 +303,7 @@ async function main() {
       const old = existing[i] || [name, 0, false];
       // boss já morto no arquivo: o número de pulls até a kill é definitivo, não mexe mais
       if (old[2]) return [name, old[1], true];
-      return [name, Math.max(pulls, old[1]), killed];
+      return [name, old[1] + pulls, killed];
     });
   }
 
