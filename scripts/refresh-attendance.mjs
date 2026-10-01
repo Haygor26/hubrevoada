@@ -236,7 +236,10 @@ async function main() {
     const firstNight = Date.UTC(NIGHTS[0][2], NIGHTS[0][0] - 1, NIGHTS[0][1]) - 12 * 3600 * 1000;
     const lastNight = Date.UTC(NIGHTS[NIGHTS.length - 1][2], NIGHTS[NIGHTS.length - 1][0] - 1, NIGHTS[NIGHTS.length - 1][1]) + 36 * 3600 * 1000;
     const reports = await fetchGuildReports(token, firstNight, lastNight);
-    const coreReports = reports.filter(r => LOG_OWNERS.includes((r.owner?.name || '').toLowerCase()));
+    // UNTIL=M/D ignora reports de noites depois dessa (ex.: UNTIL=9/29 deixa o dia de hoje em branco)
+    const untilKey = process.env.UNTIL;
+    const coreReports = reports.filter(r => LOG_OWNERS.includes((r.owner?.name || '').toLowerCase()))
+      .filter(r => !untilKey || nightKeys.indexOf(nightKeyFromTimestamp(r.startTime)) <= nightKeys.indexOf(untilKey));
     console.log(`${reports.length} reports no período, ${coreReports.length} de owners de core (${LOG_OWNERS.join(', ')}).`);
     codesToProcess = coreReports.map(r => r.code);
   }
