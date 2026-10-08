@@ -491,6 +491,38 @@
   footer .pride { background: var(--rainbow); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 700; }
 
   /* reveal on scroll */
+
+  /* faixa comemorativa — kill de Ula'tek HC (10/7) */
+  #kills { position: relative; }
+  .celebrate { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
+  .sash { position: absolute; left: -15%; right: -15%; top: 52%; transform: translateY(-50%) rotate(-11deg);
+    display: flex; align-items: center; justify-content: center; gap: 22px; padding: 18px 24px;
+    background: linear-gradient(90deg, #6d1d8f, #b0277a 30%, #ff4fa3 50%, #b0277a 70%, #6d1d8f);
+    border-block: 3px solid transparent; border-image: var(--rainbow) 1;
+    box-shadow: 0 0 0 6px rgba(30,15,54,.55), 0 30px 70px -10px rgba(0,0,0,.85), 0 0 60px -10px var(--accent); }
+  .sash::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%);
+    background-size: 250% 100%; animation: sashShine 3.8s ease-in-out infinite; }
+  .sash .boss { width: 74px; height: 74px; border-radius: 50%; border: 3px solid var(--r3); flex: none;
+    box-shadow: 0 0 22px -2px var(--r3); background: #000 center/cover; filter: grayscale(.35) contrast(1.1); position: relative; }
+  .sash .boss::after { content: "✕"; position: absolute; inset: 0; display: grid; place-items: center;
+    font: 900 3.2rem/1 var(--font); color: rgba(255,90,95,.92); text-shadow: 0 2px 8px #000; }
+  .sash .txt { text-align: center; color: #fff; }
+  .sash .big { display: block; font: 900 clamp(1.7rem, 4.6vw, 3.1rem)/1 var(--font); letter-spacing: .06em; text-transform: uppercase;
+    background: linear-gradient(180deg, #fff 30%, #ffd84d); -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 3px 0 #5a1240) drop-shadow(0 6px 14px rgba(0,0,0,.6)); }
+  .sash .small { display: block; margin-top: 8px; font: 700 clamp(.72rem, 1.6vw, .95rem)/1.3 var(--mono); letter-spacing: .14em;
+    text-transform: uppercase; color: #ffe9f5; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  .sash .trophy { font-size: 3rem; flex: none; filter: drop-shadow(0 0 14px rgba(255,216,77,.8)); animation: trophyBob 2.4s ease-in-out infinite; }
+  .confetti i { position: absolute; width: 9px; height: 15px; border-radius: 2px; opacity: .9; animation: confFall 5s linear infinite; }
+  @keyframes sashShine { 0% { background-position: 150% 0; } 60%, 100% { background-position: -100% 0; } }
+  @keyframes trophyBob { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-6px) rotate(6deg); } }
+  @keyframes confFall { from { transform: translateY(-40px) rotate(0); } to { transform: translateY(1400px) rotate(720deg); } }
+  @media (max-width: 640px) {
+    .sash { gap: 12px; padding: 12px 14px; transform: translateY(-50%) rotate(-9deg); }
+    .sash .boss { width: 48px; height: 48px; } .sash .boss::after { font-size: 2.1rem; }
+    .sash .trophy { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .sash::after, .sash .trophy, .confetti i { animation: none; } .confetti { display: none; } }
   .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s cubic-bezier(.22,1,.36,1); }
   .reveal.in { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) {
@@ -666,14 +698,14 @@
             <div class="track"><div class="fill n" data-w="100"></div></div>
           </div>
           <div class="bar h">
-            <div class="top"><span class="lbl">Heroico</span><b>8 / 9</b></div>
-            <div class="track"><div class="fill h" data-w="88.9"></div></div>
+            <div class="top"><span class="lbl">Heroico</span><b>9 / 9</b></div>
+            <div class="track"><div class="fill h" data-w="100"></div></div>
           </div>
         </div>
       </div>
       <div class="stat-col">
-        <div class="card stat"><span class="k">9/9</span><span class="l">Normal · em progressão</span></div>
-        <div class="card stat"><span class="k accent">8/9</span><span class="l">Heroico · em progressão</span></div>
+        <div class="card stat"><span class="k">9/9</span><span class="l">Normal · completo</span></div>
+        <div class="card stat"><span class="k accent">9/9</span><span class="l">Heroico · completo · AotC 🏆</span></div>
         <div class="card stat"><span class="k">25</span><span class="l">Raiders no core</span></div>
       </div>
     </div>
@@ -683,7 +715,7 @@
     <div class="shead">
       <span class="n">03</span>
       <h2>Pulls</h2>
-      <span class="hint">9/9 chefes abatidos no Normal</span>
+      <span class="hint">9/9 no Normal e no Heroico</span>
     </div>
     <div class="raid-group">
       <div class="raid-group-head">The Tidebound Grotto</div>
@@ -714,6 +746,19 @@
           <div class="kcol-head">Heroico</div>
           <div class="kills" id="killsListHeroic"></div>
         </div>
+      </div>
+    </div>
+
+    <div class="celebrate" aria-label="Parabéns! Ula'tek abatida no Heroico">
+      <div class="confetti" id="confetti"></div>
+      <div class="sash">
+        <span class="trophy">🏆</span>
+        <span class="boss" id="sashBoss"></span>
+        <span class="txt">
+          <span class="big">Parabéns, Revoada!</span>
+          <span class="small">Ula'tek abatida · Heroico · 43 pulls · Ahead of the Curve</span>
+        </span>
+        <span class="trophy">🏆</span>
       </div>
     </div>
   </section>
@@ -1140,7 +1185,7 @@
     ["Sszorak",7,true],
     ["The Twin Fangs",10,true],
     ["The Coiled Altar",16,true],
-    ["Ula'tek",38,false]
+    ["Ula'tek",43,true]
   ];
   (function () {
     var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
@@ -1172,6 +1217,22 @@
     renderKills('killsListMythicTG', KILLS_M_TG);
     renderKills('killsListNormal', KILLS_N);
     renderKills('killsListHeroic', KILLS_H);
+  // faixa comemorativa: retrato de Ula'tek + confete
+  (function () {
+    var b = document.getElementById('sashBoss');
+    if (b && BOSSICONS["Ula'tek"]) b.style.backgroundImage = 'url("' + BOSSICONS["Ula'tek"] + '")';
+    var c = document.getElementById('confetti'); if (!c) return;
+    var cols = ['#ff5a5f','#ff9f45','#ffd84d','#4fd6a0','#3fb6ff','#a86bff','#ff4fa3'];
+    for (var i = 0; i < 46; i++) {
+      var e = document.createElement('i');
+      e.style.left = (Math.random() * 100) + '%';
+      e.style.background = cols[i % cols.length];
+      e.style.animationDelay = (-Math.random() * 5) + 's';
+      e.style.animationDuration = (4 + Math.random() * 3) + 's';
+      c.appendChild(e);
+    }
+  })();
+
   })();
 
   // linha do tempo de presença — matriz real do WarcraftLogs (aba Attendance)
@@ -1189,9 +1250,9 @@
       [9, 29, 2026], [9, 30, 2026], [10, 6, 2026], [10, 7, 2026]
     ];
     // índice da última noite já realizada (-1 = nenhuma ainda). A partir daí as colunas ficam cinza.
-    var LAST_LOGGED = 14;
+    var LAST_LOGGED = 15;
     // presença real por jogador → { "M/D": 1|0 } — preencher conforme os logs saírem
-    var ATT = {"Dracullaura":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/30":1,"9/29":1,"9/23":1,"10/6":1},"Bahryzta":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Ormot":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Athelìa":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Buticodeoro":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Chiso":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Salkiing":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Tessagrayh":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Aloppes":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Carina":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Dïazepam":{"8/18":1,"8/19":1,"8/25":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Euridice":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Feanori":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Grömdak":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Hakarvyr":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/30":1,"10/6":1},"Hyzor":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Inflexível":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Jazzkiler":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Kissuko":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1},"Kolhberg":{"8/18":1,"8/19":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"10/6":1},"Riswen":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Saponáceo":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Seind":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/22":1,"9/23":1,"9/30":1,"10/6":1},"Tiagolargado":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Valunii":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1}};
+    var ATT = {"Dracullaura":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/30":1,"9/29":1,"9/23":1,"10/6":1,"10/7":1},"Bahryzta":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Ormot":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Athelìa":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Buticodeoro":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Chiso":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Salkiing":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Tessagrayh":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Aloppes":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Carina":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Dïazepam":{"8/18":1,"8/19":1,"8/25":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Euridice":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Feanori":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Grömdak":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Hakarvyr":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/30":1,"10/6":1,"10/7":1},"Hyzor":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Inflexível":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1},"Jazzkiler":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Kissuko":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1},"Kolhberg":{"8/18":1,"8/19":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"10/6":1,"10/7":1},"Riswen":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Saponáceo":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Seind":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/22":1,"9/23":1,"9/30":1,"10/6":1,"10/7":1},"Tiagolargado":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1},"Valunii":{"8/18":1,"8/19":1,"8/25":1,"8/26":1,"9/1":1,"9/2":1,"9/8":1,"9/9":1,"9/15":1,"9/16":1,"9/22":1,"9/23":1,"9/29":1,"9/30":1,"10/6":1,"10/7":1}};
 
     var ALL = ROSTER.tank.concat(ROSTER.heal, ROSTER.dps);
     var ROLE_ICON = { tank: '🛡️', heal: '💚', dps: '⚔️' };
